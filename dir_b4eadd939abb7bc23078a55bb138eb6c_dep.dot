@@ -1,0 +1,15 @@
+digraph "include/proxddp/compat/crocoddyl" {
+  bgcolor=transparent;
+  compound=true
+  node [ fontsize="10", fontname="Helvetica"];
+  edge [ labelfontsize="10", labelfontname="Helvetica"];
+  subgraph clusterdir_7501df3cfc83eb12cdd04cd99cdc0f57 {
+    graph [ bgcolor="#ddddee", pencolor="black", label="compat" fontname="Helvetica", fontsize="10", URL="dir_7501df3cfc83eb12cdd04cd99cdc0f57.html"]
+  dir_b4eadd939abb7bc23078a55bb138eb6c [shape=box, label="crocoddyl", style="filled", fillcolor="#eeeeff", pencolor="black", URL="dir_b4eadd939abb7bc23078a55bb138eb6c.html"];
+  }
+  dir_232bb84d36e85fd30fe7e48597eb9660 [shape=box label="core" color="red" URL="dir_232bb84d36e85fd30fe7e48597eb9660.html"];
+  dir_3191cd8ca837f3f104ddcc93c32886e2 [shape=box label="utils" URL="dir_3191cd8ca837f3f104ddcc93c32886e2.html"];
+  dir_232bb84d36e85fd30fe7e48597eb9660->dir_3191cd8ca837f3f104ddcc93c32886e2 [headlabel="2", labeldistance=1.5 headhref="dir_000007_000010.html"];
+  dir_b4eadd939abb7bc23078a55bb138eb6c->dir_232bb84d36e85fd30fe7e48597eb9660 [headlabel="4", labeldistance=1.5 headhref="dir_000004_000007.html"];
+  dir_b4eadd939abb7bc23078a55bb138eb6c->dir_3191cd8ca837f3f104ddcc93c32886e2 [headlabel="1", labeldistance=1.5 headhref="dir_000004_000010.html"];
+}

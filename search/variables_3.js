@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['d_5f_919',['d_',['../structproxddp_1_1LinearFunctionTpl.html#a0d5b1bb83ca446293440d42d44fcc53d',1,'proxddp::LinearFunctionTpl']]],
+  ['dbl_5fformat_920',['dbl_format',['../namespaceproxddp.html#ad43fd11a6d19ec0682ea8d6e2fead313',1,'proxddp']]],
+  ['default_5fvector_921',['DEFAULT_VECTOR',['../namespaceproxddp.html#a3d233926ebcf24c267f301ecc253a427',1,'proxddp']]],
+  ['dims_5f_922',['dims_',['../structproxddp_1_1ConstraintContainer.html#a92ecfbb51940342ff451327de3ce1c3e',1,'proxddp::ConstraintContainer']]],
+  ['directional_5fderivative_5fthresh_923',['directional_derivative_thresh',['../structproxddp_1_1LinesearchParams.html#a3d09a3fabf472825cb273fec4bd3f882',1,'proxddp::LinesearchParams']]],
+  ['dlams_5f_924',['dlams_',['../structproxddp_1_1WorkspaceTpl.html#abf22287da4439e381bd268458bce1704',1,'proxddp::WorkspaceTpl']]],
+  ['dphi0_925',['dphi0',['../structproxddp_1_1LogRecord.html#adf0c7eeda60afac66b2ce51393e9e694',1,'proxddp::LogRecord']]],
+  ['dt_5f2_5f_926',['dt_2_',['../structproxddp_1_1dynamics_1_1IntegratorRK2Tpl.html#aac5d92f09fe0a35c649d4caf62c9a2b8',1,'proxddp::dynamics::IntegratorRK2Tpl']]],
+  ['dtau_5fdu_5f_927',['dtau_du_',['../structproxddp_1_1dynamics_1_1MultibodyConstraintFwdDataTpl.html#af06638a62c23d1a10f606fb6b83009e2',1,'proxddp::dynamics::MultibodyConstraintFwdDataTpl::dtau_du_()'],['../structproxddp_1_1dynamics_1_1MultibodyFreeFwdDataTpl.html#ae48aad1fe8aa25905a1a4f1678614246',1,'proxddp::dynamics::MultibodyFreeFwdDataTpl::dtau_du_()']]],
+  ['dtau_5fdx_5f_928',['dtau_dx_',['../structproxddp_1_1dynamics_1_1MultibodyConstraintFwdDataTpl.html#ac1bb92d75be4bfea4c08f97249df5629',1,'proxddp::dynamics::MultibodyConstraintFwdDataTpl::dtau_dx_()'],['../structproxddp_1_1dynamics_1_1MultibodyFreeFwdDataTpl.html#a1739fa06c5f2a9398da91b3b12daa581',1,'proxddp::dynamics::MultibodyFreeFwdDataTpl::dtau_dx_()']]],
+  ['du_5f_929',['du_',['../structproxddp_1_1ProximalDataTpl.html#a3b4d4d8fe3521f2d37ae6817086770b6',1,'proxddp::ProximalDataTpl']]],
+  ['dual_5falpha_930',['dual_alpha',['../structproxddp_1_1BCLParams.html#a039fbe166f7d7d8709b0c8e408686020',1,'proxddp::BCLParams']]],
+  ['dual_5fbeta_931',['dual_beta',['../structproxddp_1_1BCLParams.html#acf74d0607029271fe070da3b20a7c0cb',1,'proxddp::BCLParams']]],
+  ['dual_5ferr_932',['dual_err',['../structproxddp_1_1LogRecord.html#a6ae520698835baeddc96585b80b5fb46',1,'proxddp::LogRecord']]],
+  ['dual_5finfeas_933',['dual_infeas',['../structproxddp_1_1helpers_1_1history__callback.html#a946ec6fc91024364c43430e3189f1e6c',1,'proxddp::helpers::history_callback']]],
+  ['dual_5finfeas_5fby_5fstage_934',['dual_infeas_by_stage',['../structproxddp_1_1WorkspaceTpl.html#a430f988e146a0071cc27c6ec90043144',1,'proxddp::WorkspaceTpl']]],
+  ['dual_5finfeasibility_935',['dual_infeasibility',['../structproxddp_1_1ResultsTpl.html#a67655b03701249e3c5fd9a81a9b797be',1,'proxddp::ResultsTpl']]],
+  ['dual_5ftols_936',['dual_tols',['../structproxddp_1_1helpers_1_1history__callback.html#ac9503d67f2ceb9386186bf56bef8e491',1,'proxddp::helpers::history_callback']]],
+  ['dual_5fweight_5f_937',['dual_weight_',['../structproxddp_1_1PDALFunction.html#a732342248644ba739ff8c5a268d7b088',1,'proxddp::PDALFunction']]],
+  ['dummy_5fterm_5fu0_938',['dummy_term_u0',['../structproxddp_1_1TrajOptProblemTpl.html#a1211c5c274d3366e8395652dab8a48df',1,'proxddp::TrajOptProblemTpl']]],
+  ['dus_5f_939',['dus_',['../structproxddp_1_1WorkspaceTpl.html#a41be59dc9870b7f870c83651fbd8334c',1,'proxddp::WorkspaceTpl']]],
+  ['dx1_5f_940',['dx1_',['../structproxddp_1_1dynamics_1_1IntegratorMidpointDataTpl.html#ab84b1ffb7b6805d4e72d62d66e17816e',1,'proxddp::dynamics::IntegratorMidpointDataTpl::dx1_()'],['../structproxddp_1_1dynamics_1_1IntegratorRK2DataTpl.html#aeb7c1f9a63eb94518fdfc34b94ad666e',1,'proxddp::dynamics::IntegratorRK2DataTpl::dx1_()']]],
+  ['dx_5f_941',['dx_',['../structproxddp_1_1ExplicitDynamicsDataTpl.html#a2a4e18176d72de1332d5e63a4d274ef2',1,'proxddp::ExplicitDynamicsDataTpl::dx_()'],['../structproxddp_1_1ProximalDataTpl.html#a7ee03d42d6a11790ccb734ca16d9b134',1,'proxddp::ProximalDataTpl::dx_()']]],
+  ['dxref_5f_942',['dxref_',['../structproxddp_1_1ExplicitDynamicsDataTpl.html#a75ccf335995fff4775ed8f7b03eda8cf',1,'proxddp::ExplicitDynamicsDataTpl']]],
+  ['dxs_5f_943',['dxs_',['../structproxddp_1_1WorkspaceTpl.html#ae280961b169334a54424a3171eb43e73',1,'proxddp::WorkspaceTpl']]]
+];

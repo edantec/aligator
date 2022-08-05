@@ -1,0 +1,26 @@
+var structproxddp_1_1FunctionDataTpl =
+[
+    [ "Scalar", "structproxddp_1_1FunctionDataTpl.html#abb955294aa338f1122f1645e9f175bed", null ],
+    [ "FunctionDataTpl", "structproxddp_1_1FunctionDataTpl.html#a46761be0ddf2ee0d49fe3d3f948d6cb3", null ],
+    [ "~FunctionDataTpl", "structproxddp_1_1FunctionDataTpl.html#ada7ae65430bede0f34f61c02b34d8345", null ],
+    [ "operator<<", "structproxddp_1_1FunctionDataTpl.html#a6f3402fbf02deadf3610b4af865c3533", null ],
+    [ "Scalar", "structproxddp_1_1FunctionDataTpl.html#aa30ad594308e787db506c72aa4116f09", null ],
+    [ "ndx1", "structproxddp_1_1FunctionDataTpl.html#af7d59907ed9224a79b8609a2bdc0b1b2", null ],
+    [ "nu", "structproxddp_1_1FunctionDataTpl.html#a2fb930822b9904b5d68dfb2de7ce9eb7", null ],
+    [ "ndx2", "structproxddp_1_1FunctionDataTpl.html#a356b4ac4139bbe7d74e25b50627b3f5b", null ],
+    [ "nr", "structproxddp_1_1FunctionDataTpl.html#a4a89decd9acf2ee04c30b6cf1580910d", null ],
+    [ "nvar", "structproxddp_1_1FunctionDataTpl.html#a6add39f91ae2d9f27708368c44c3896c", null ],
+    [ "value_", "structproxddp_1_1FunctionDataTpl.html#a6edec6a693495d5f9b047487d47ab0bc", null ],
+    [ "jac_buffer_", "structproxddp_1_1FunctionDataTpl.html#a0d6606887782bc4065400a2153614fad", null ],
+    [ "vhp_buffer_", "structproxddp_1_1FunctionDataTpl.html#acc06186f5ba88583956f4db78b958eb0", null ],
+    [ "Jx_", "structproxddp_1_1FunctionDataTpl.html#a4f464024e10344d771c55babf505916f", null ],
+    [ "Ju_", "structproxddp_1_1FunctionDataTpl.html#a1673b679b161f983da32811976b64329", null ],
+    [ "Jy_", "structproxddp_1_1FunctionDataTpl.html#ad7a2aa61b755977b0ae99fc9d97ace82", null ],
+    [ "Hxx_", "structproxddp_1_1FunctionDataTpl.html#a3da9a60e9cf89a1356d0304a7449cd54", null ],
+    [ "Hxu_", "structproxddp_1_1FunctionDataTpl.html#a5bca55017689328fffa4c89118a3c946", null ],
+    [ "Hxy_", "structproxddp_1_1FunctionDataTpl.html#a88c5a0c7e55ec0ec42305718d444be1a", null ],
+    [ "Huu_", "structproxddp_1_1FunctionDataTpl.html#ad92c64937f3e1a229e44a779007581a3", null ],
+    [ "Huy_", "structproxddp_1_1FunctionDataTpl.html#afd5558285388dc192a2257ae33bd3bc1", null ],
+    [ "Hyy_", "structproxddp_1_1FunctionDataTpl.html#a0c120f91c31fd31639fc369484390095", null ],
+    [ "valref_", "structproxddp_1_1FunctionDataTpl.html#aea5d81eddabdacadde126cc13a4c44a0", null ]
+];

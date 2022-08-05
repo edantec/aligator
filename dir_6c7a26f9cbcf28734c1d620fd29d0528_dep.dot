@@ -1,0 +1,12 @@
+digraph "include/proxddp/modelling/dynamics" {
+  bgcolor=transparent;
+  compound=true
+  node [ fontsize="10", fontname="Helvetica"];
+  edge [ labelfontsize="10", labelfontname="Helvetica"];
+  subgraph clusterdir_59a5fceee63577d6010f1d402f708d54 {
+    graph [ bgcolor="#ddddee", pencolor="black", label="modelling" fontname="Helvetica", fontsize="10", URL="dir_59a5fceee63577d6010f1d402f708d54.html"]
+  dir_6c7a26f9cbcf28734c1d620fd29d0528 [shape=box, label="dynamics", style="filled", fillcolor="#eeeeff", pencolor="black", URL="dir_6c7a26f9cbcf28734c1d620fd29d0528.html"];
+  }
+  dir_232bb84d36e85fd30fe7e48597eb9660 [shape=box label="core" color="red" URL="dir_232bb84d36e85fd30fe7e48597eb9660.html"];
+  dir_6c7a26f9cbcf28734c1d620fd29d0528->dir_232bb84d36e85fd30fe7e48597eb9660 [headlabel="2", labeldistance=1.5 headhref="dir_000006_000007.html"];
+}

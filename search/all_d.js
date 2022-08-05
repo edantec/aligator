@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['ndx_315',['ndx',['../structproxddp_1_1CostAbstractTpl.html#a7c043f598f2c0ac98ec48675b5ae2e84',1,'proxddp::CostAbstractTpl::ndx()'],['../structproxddp_1_1compat_1_1croc_1_1StateWrapperTpl.html#ac7a92a4558f756b270766bf3261a9d10',1,'proxddp::compat::croc::StateWrapperTpl::ndx()'],['../structproxddp_1_1dynamics_1_1ContinuousDynamicsAbstractTpl.html#a404e08e9adbb3de9c7e344ae07d00f18',1,'proxddp::dynamics::ContinuousDynamicsAbstractTpl::ndx()']]],
+  ['ndx1_316',['ndx1',['../structproxddp_1_1StageFunctionTpl.html#ab0ac6084ee60ae275bde3758da343e2f',1,'proxddp::StageFunctionTpl::ndx1()'],['../structproxddp_1_1FunctionDataTpl.html#af7d59907ed9224a79b8609a2bdc0b1b2',1,'proxddp::FunctionDataTpl::ndx1()'],['../classproxddp_1_1StageModelTpl.html#a3c6150421eb8f7d9914e21a6c230a9bb',1,'proxddp::StageModelTpl::ndx1()']]],
+  ['ndx2_317',['ndx2',['../structproxddp_1_1StageFunctionTpl.html#a3477e14b36af555d0aa5dc3c37863cb3',1,'proxddp::StageFunctionTpl::ndx2()'],['../structproxddp_1_1FunctionDataTpl.html#a356b4ac4139bbe7d74e25b50627b3f5b',1,'proxddp::FunctionDataTpl::ndx2()'],['../classproxddp_1_1StageModelTpl.html#a366b41365a91ef3bd036515ebfd11791',1,'proxddp::StageModelTpl::ndx2()']]],
+  ['ndx_5f_318',['ndx_',['../structproxddp_1_1CostDataAbstractTpl.html#ab68acc1b17c04cb3d016810200f5472c',1,'proxddp::CostDataAbstractTpl']]],
+  ['neutral_319',['neutral',['../structproxddp_1_1compat_1_1croc_1_1StateWrapperTpl.html#a533819355d2e763118fa5d343d243b6c',1,'proxddp::compat::croc::StateWrapperTpl']]],
+  ['newton_320',['NEWTON',['../namespaceproxddp.html#a93f4a1a6571e3b877f27a9d0d28beabfa543a80c769aa267bbf02f31e2d7e07e6',1,'proxddp']]],
+  ['newton_2draphson_2ehpp_321',['newton-raphson.hpp',['../newton-raphson_8hpp.html',1,'']]],
+  ['newtonraphson_322',['NewtonRaphson',['../structproxddp_1_1NewtonRaphson.html',1,'proxddp']]],
+  ['next_5fstate_5f_323',['next_state_',['../structproxddp_1_1ExplicitDynamicsModelTpl.html#af6454fbb61da86bd0ec2b192816ccf25',1,'proxddp::ExplicitDynamicsModelTpl']]],
+  ['no_5fctrl_5fterm_324',['no_ctrl_term',['../structproxddp_1_1ProximalPenaltyTpl.html#a97bdcfa9f18b79b5252de7a2baec1308',1,'proxddp::ProximalPenaltyTpl']]],
+  ['nr_325',['nr',['../structproxddp_1_1StageFunctionTpl.html#adc45ab854758b2280a69b2b7d454dce4',1,'proxddp::StageFunctionTpl::nr()'],['../structproxddp_1_1FunctionDataTpl.html#a4a89decd9acf2ee04c30b6cf1580910d',1,'proxddp::FunctionDataTpl::nr()']]],
+  ['nsteps_326',['nsteps',['../structproxddp_1_1WorkspaceTpl.html#a39dab77350cf2ab868cd65639741c71d',1,'proxddp::WorkspaceTpl']]],
+  ['ntau_327',['ntau',['../structproxddp_1_1dynamics_1_1MultibodyConstraintFwdDynamicsTpl.html#ace8e0b9e94e3d38ed21558c473df41c6',1,'proxddp::dynamics::MultibodyConstraintFwdDynamicsTpl::ntau()'],['../structproxddp_1_1dynamics_1_1MultibodyFreeFwdDynamicsTpl.html#a72f6928d03039f768ac8314d077dec2e',1,'proxddp::dynamics::MultibodyFreeFwdDynamicsTpl::ntau()']]],
+  ['nu_328',['nu',['../structproxddp_1_1CostAbstractTpl.html#a41e93c5eabeb2981a06ab331f3ce91a0',1,'proxddp::CostAbstractTpl::nu()'],['../structproxddp_1_1StageFunctionTpl.html#a68deff9c9f1e01d5e863f98ff496b969',1,'proxddp::StageFunctionTpl::nu()'],['../structproxddp_1_1FunctionDataTpl.html#a2fb930822b9904b5d68dfb2de7ce9eb7',1,'proxddp::FunctionDataTpl::nu()'],['../classproxddp_1_1StageModelTpl.html#a3d797535abde0b4fe5b45527a265f654',1,'proxddp::StageModelTpl::nu()'],['../structproxddp_1_1dynamics_1_1ContinuousDynamicsAbstractTpl.html#a2a8c8ddcd7ed7e8647bd841ed3d4124b',1,'proxddp::dynamics::ContinuousDynamicsAbstractTpl::nu()']]],
+  ['nu_5f_329',['nu_',['../structproxddp_1_1CostDataAbstractTpl.html#a22cb1b64b70ec5db432dcaef110d9e5c',1,'proxddp::CostDataAbstractTpl::nu_()'],['../structproxddp_1_1dynamics_1_1ContinuousDynamicsAbstractTpl.html#a81e4ea9426bb347428f0dfb8f676ec37',1,'proxddp::dynamics::ContinuousDynamicsAbstractTpl::nu_()']]],
+  ['num_5fiters_330',['num_iters',['../structproxddp_1_1ResultsTpl.html#a182eb2649c82f99a21f9f1d6e7414285',1,'proxddp::ResultsTpl']]],
+  ['numconstraints_331',['numConstraints',['../structproxddp_1_1ConstraintContainer.html#a5aeda2246603a91bfe01eaa067cfd73e',1,'proxddp::ConstraintContainer::numConstraints()'],['../classproxddp_1_1StageModelTpl.html#ab7299fbfd9746dcf19d891e123f9e956',1,'proxddp::StageModelTpl::numConstraints()']]],
+  ['numdual_332',['numDual',['../classproxddp_1_1StageModelTpl.html#a4ac1a77df69f72a73fc088674f41d611',1,'proxddp::StageModelTpl']]],
+  ['numprimal_333',['numPrimal',['../classproxddp_1_1StageModelTpl.html#a3193a9fa94badca4cff4f08a6cd67c49',1,'proxddp::StageModelTpl']]],
+  ['numsteps_334',['numSteps',['../structproxddp_1_1TrajOptProblemTpl.html#a34cb7bc66fb4d2b07e608a4c72b9a5b8',1,'proxddp::TrajOptProblemTpl']]],
+  ['nvar_335',['nvar',['../structproxddp_1_1StageFunctionTpl.html#aed4b3a2a39b18eae871da2be69643731',1,'proxddp::StageFunctionTpl::nvar()'],['../structproxddp_1_1FunctionDataTpl.html#a6add39f91ae2d9f27708368c44c3896c',1,'proxddp::FunctionDataTpl::nvar()']]],
+  ['nx_336',['nx',['../structproxddp_1_1compat_1_1croc_1_1StateWrapperTpl.html#a67f7e914df7b36a3ac88aa3b9797404c',1,'proxddp::compat::croc::StateWrapperTpl']]],
+  ['nx1_337',['nx1',['../classproxddp_1_1StageModelTpl.html#ae8f54ab549716a58894d3563a04bd6e9',1,'proxddp::StageModelTpl']]],
+  ['nx2_338',['nx2',['../structproxddp_1_1ExplicitDynamicsModelTpl.html#a9baf120f4e3e821acb7c1f75948687fd',1,'proxddp::ExplicitDynamicsModelTpl::nx2()'],['../classproxddp_1_1StageModelTpl.html#ae0471c2154e9c3253fb7e21af876277f',1,'proxddp::StageModelTpl::nx2()']]]
+];

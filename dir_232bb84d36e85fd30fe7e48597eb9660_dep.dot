@@ -1,0 +1,18 @@
+digraph "include/proxddp/core" {
+  bgcolor=transparent;
+  compound=true
+  node [ fontsize="10", fontname="Helvetica"];
+  edge [ labelfontsize="10", labelfontname="Helvetica"];
+  subgraph clusterdir_b8f76124f2fc7662a7b313e987f48e6d {
+    graph [ bgcolor="#ddddee", pencolor="black", label="proxddp" fontname="Helvetica", fontsize="10", URL="dir_b8f76124f2fc7662a7b313e987f48e6d.html"]
+  subgraph clusterdir_232bb84d36e85fd30fe7e48597eb9660 {
+    graph [ bgcolor="#eeeeff", pencolor="black", label="" URL="dir_232bb84d36e85fd30fe7e48597eb9660.html"];
+    dir_232bb84d36e85fd30fe7e48597eb9660 [shape=plaintext label="core"];
+    dir_239052ba79bbac32cddf7f06c8a77032 [shape=box label="helpers" color="black" fillcolor="white" style="filled" URL="dir_239052ba79bbac32cddf7f06c8a77032.html"];
+  }
+  }
+  dir_59a5fceee63577d6010f1d402f708d54 [shape=box label="modelling" color="red" URL="dir_59a5fceee63577d6010f1d402f708d54.html"];
+  dir_3191cd8ca837f3f104ddcc93c32886e2 [shape=box label="utils" URL="dir_3191cd8ca837f3f104ddcc93c32886e2.html"];
+  dir_232bb84d36e85fd30fe7e48597eb9660->dir_59a5fceee63577d6010f1d402f708d54 [headlabel="1", labeldistance=1.5 headhref="dir_000007_000005.html"];
+  dir_232bb84d36e85fd30fe7e48597eb9660->dir_3191cd8ca837f3f104ddcc93c32886e2 [headlabel="2", labeldistance=1.5 headhref="dir_000007_000010.html"];
+}

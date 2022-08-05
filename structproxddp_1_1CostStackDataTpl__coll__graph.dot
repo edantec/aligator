@@ -1,0 +1,14 @@
+digraph "proxddp::CostStackDataTpl&lt; _Scalar &gt;"
+{
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node1 [label="proxddp::CostStackDataTpl\l\< _Scalar \>",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black",tooltip=" "];
+  Node2 -> Node1 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" sub_cost_data" ,fontname="Helvetica"];
+  Node2 [label="std::vector\< shared\l_ptr\< CostDataAbstractTpl\l\< Scalar \> \> \>",height=0.2,width=0.4,color="grey75",tooltip=" "];
+  Node3 -> Node2 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" elements" ,fontname="Helvetica"];
+  Node3 [label="std::shared_ptr\< CostData\lAbstractTpl\< Scalar \> \>",height=0.2,width=0.4,color="grey75",tooltip=" "];
+  Node4 -> Node3 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" ptr" ,fontname="Helvetica"];
+  Node4 [label="proxddp::CostDataAbstract\lTpl\< Scalar \>",height=0.2,width=0.4,color="black",URL="$structproxddp_1_1CostDataAbstractTpl.html",tooltip=" "];
+}

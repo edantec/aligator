@@ -1,0 +1,7 @@
+var searchData=
+[
+  ['totaldim_857',['totalDim',['../structproxddp_1_1ConstraintContainer.html#a3a71cb5b24a255aefab274a9dae03775',1,'proxddp::ConstraintContainer']]],
+  ['trajoptdatatpl_858',['TrajOptDataTpl',['../structproxddp_1_1TrajOptDataTpl.html#ac0719fdeb439b8d8df1b729b4e95c9e2',1,'proxddp::TrajOptDataTpl::TrajOptDataTpl()=delete'],['../structproxddp_1_1TrajOptDataTpl.html#a85233f11cd8499a67a858c4fe63425f7',1,'proxddp::TrajOptDataTpl::TrajOptDataTpl(const TrajOptProblemTpl&lt; Scalar &gt; &amp;problem)']]],
+  ['trajoptproblemtpl_859',['TrajOptProblemTpl',['../structproxddp_1_1TrajOptProblemTpl.html#a69bf62cc924e9468df9ce23f7280d1a5',1,'proxddp::TrajOptProblemTpl::TrajOptProblemTpl(const VectorXs &amp;x0, const std::vector&lt; shared_ptr&lt; StageModel &gt;&gt; &amp;stages, const shared_ptr&lt; CostAbstract &gt; &amp;term_cost)'],['../structproxddp_1_1TrajOptProblemTpl.html#aa4721f217ec46effa2766fe827615709',1,'proxddp::TrajOptProblemTpl::TrajOptProblemTpl(const VectorXs &amp;x0, const int nu, const shared_ptr&lt; Manifold &gt; &amp;space, const shared_ptr&lt; CostAbstract &gt; &amp;term_cost)'],['../structproxddp_1_1TrajOptProblemTpl.html#ae8f5960bb9593d71ef1e0d95bffb2578',1,'proxddp::TrajOptProblemTpl::TrajOptProblemTpl(const InitCstrType &amp;resdl, const int nu, const shared_ptr&lt; CostAbstract &gt; &amp;term_cost)']]],
+  ['trystep_860',['tryStep',['../structproxddp_1_1SolverProxDDP.html#a158b5f87bb7c0c23b02f161f55ffb987',1,'proxddp::SolverProxDDP']]]
+];

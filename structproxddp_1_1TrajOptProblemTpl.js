@@ -1,0 +1,26 @@
+var structproxddp_1_1TrajOptProblemTpl =
+[
+    [ "Scalar", "structproxddp_1_1TrajOptProblemTpl.html#a41e280bd4dcbbbe1fa2194094259605f", null ],
+    [ "StageModel", "structproxddp_1_1TrajOptProblemTpl.html#a55029d235d983a9039385902e8c9243d", null ],
+    [ "Function", "structproxddp_1_1TrajOptProblemTpl.html#ab43f1d855c98a35464fcc9f5bce61898", null ],
+    [ "TrajOptData", "structproxddp_1_1TrajOptProblemTpl.html#a001132498b8bcc04df5d7d0120333a9d", null ],
+    [ "Manifold", "structproxddp_1_1TrajOptProblemTpl.html#ada0309f819eb32736f3a8eafc1994f7a", null ],
+    [ "CostAbstract", "structproxddp_1_1TrajOptProblemTpl.html#aaf3a817e32352c0875fe611fd1c59efd", null ],
+    [ "Constraint", "structproxddp_1_1TrajOptProblemTpl.html#af6ff11d26c60f29f89d19ed8cfdb9aa0", null ],
+    [ "InitCstrType", "structproxddp_1_1TrajOptProblemTpl.html#a5419ecab9354f0ed4d397ba15cb90f7d", null ],
+    [ "TrajOptProblemTpl", "structproxddp_1_1TrajOptProblemTpl.html#a69bf62cc924e9468df9ce23f7280d1a5", null ],
+    [ "TrajOptProblemTpl", "structproxddp_1_1TrajOptProblemTpl.html#aa4721f217ec46effa2766fe827615709", null ],
+    [ "TrajOptProblemTpl", "structproxddp_1_1TrajOptProblemTpl.html#ae8f5960bb9593d71ef1e0d95bffb2578", null ],
+    [ "addStage", "structproxddp_1_1TrajOptProblemTpl.html#a106faf9b67c6e88e75d43271d86f8356", null ],
+    [ "getInitState", "structproxddp_1_1TrajOptProblemTpl.html#af94b52e7cb58a6174bc9e35cd01dfd85", null ],
+    [ "setTerminalConstraint", "structproxddp_1_1TrajOptProblemTpl.html#a56b470db35d7bb6b8cf121abf60f39bb", null ],
+    [ "numSteps", "structproxddp_1_1TrajOptProblemTpl.html#a34cb7bc66fb4d2b07e608a4c72b9a5b8", null ],
+    [ "evaluate", "structproxddp_1_1TrajOptProblemTpl.html#a475c6134af7a940ba92d706c28d73d8e", null ],
+    [ "computeDerivatives", "structproxddp_1_1TrajOptProblemTpl.html#a5a7a688328123a8d46ba6e35ec5aff69", null ],
+    [ "Scalar", "structproxddp_1_1TrajOptProblemTpl.html#aabb79984f5d093748e74a2a1e56b0b28", null ],
+    [ "init_state_error", "structproxddp_1_1TrajOptProblemTpl.html#a952f0896f3d7d90be6ffb28ddb4edd4d", null ],
+    [ "stages_", "structproxddp_1_1TrajOptProblemTpl.html#a17dace751b8b7751311e0a5035ae368c", null ],
+    [ "term_cost_", "structproxddp_1_1TrajOptProblemTpl.html#ab47e1ade9873468328fb4cf0aa7b7640", null ],
+    [ "term_constraint_", "structproxddp_1_1TrajOptProblemTpl.html#aecc02b4096e78534577e5fef790b43a6", null ],
+    [ "dummy_term_u0", "structproxddp_1_1TrajOptProblemTpl.html#a1211c5c274d3366e8395652dab8a48df", null ]
+];

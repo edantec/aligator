@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['p_5fref_5f_1022',['p_ref_',['../structproxddp_1_1FramePlacementResidualTpl.html#aae02ac06166ce641a8a5194fb7d9bc71',1,'proxddp::FramePlacementResidualTpl::p_ref_()'],['../structproxddp_1_1FrameTranslationResidualTpl.html#aa0e302a67eef29561cb517cbbf765b75',1,'proxddp::FrameTranslationResidualTpl::p_ref_()']]],
+  ['p_5fref_5finverse_5f_1023',['p_ref_inverse_',['../structproxddp_1_1FramePlacementResidualTpl.html#af55c2aadc36f2b68c80f305192fc6531',1,'proxddp::FramePlacementResidualTpl']]],
+  ['pd_5fstep_5f_1024',['pd_step_',['../structproxddp_1_1WorkspaceTpl.html#ae30836806a561247f4194d5776ec7546',1,'proxddp::WorkspaceTpl']]],
+  ['penalty_5fvalue_1025',['penalty_value',['../structproxddp_1_1PDALFunction.html#afe04588b9a889a12963febfc6fa10ec1',1,'proxddp::PDALFunction']]],
+  ['pin_5fdata_5f_1026',['pin_data_',['../structproxddp_1_1dynamics_1_1MultibodyConstraintFwdDataTpl.html#a2cc36f3b892b23cf35b16229a3d3bfda',1,'proxddp::dynamics::MultibodyConstraintFwdDataTpl::pin_data_()'],['../structproxddp_1_1dynamics_1_1MultibodyFreeFwdDataTpl.html#a48c8d6afa08dd39c69b7f217571b3c07',1,'proxddp::dynamics::MultibodyFreeFwdDataTpl::pin_data_()'],['../structproxddp_1_1FramePlacementDataTpl.html#ab718c6d284e7115d027ded02366f0c77',1,'proxddp::FramePlacementDataTpl::pin_data_()'],['../structproxddp_1_1FrameTranslationDataTpl.html#ad50d5675fdc2f191fb9572f3faaa8c84',1,'proxddp::FrameTranslationDataTpl::pin_data_()'],['../structproxddp_1_1FrameVelocityDataTpl.html#a1cb0c31aab1635152b30be2d0dd2f1d2',1,'proxddp::FrameVelocityDataTpl::pin_data_()']]],
+  ['pin_5fframe_5fid_5f_1027',['pin_frame_id_',['../structproxddp_1_1FramePlacementResidualTpl.html#a3360783ee29b50fde356bbbadccd97cc',1,'proxddp::FramePlacementResidualTpl::pin_frame_id_()'],['../structproxddp_1_1FrameTranslationResidualTpl.html#a2bd57b5666df7851c8962521ba4c331c',1,'proxddp::FrameTranslationResidualTpl::pin_frame_id_()'],['../structproxddp_1_1FrameVelocityResidualTpl.html#a5e179f2501c5e6743dcff728d9ff9587',1,'proxddp::FrameVelocityResidualTpl::pin_frame_id_()']]],
+  ['pin_5fmodel_5f_1028',['pin_model_',['../structproxddp_1_1FramePlacementResidualTpl.html#a8b6238bcc51a3dcf2ae52a95ec6c5170',1,'proxddp::FramePlacementResidualTpl::pin_model_()'],['../structproxddp_1_1FrameTranslationResidualTpl.html#a9f2e4ebd242e91a990333e8ef3c78aab',1,'proxddp::FrameTranslationResidualTpl::pin_model_()'],['../structproxddp_1_1FrameVelocityResidualTpl.html#a49bba9dffcf336394ae3af0424cbdf41',1,'proxddp::FrameVelocityResidualTpl::pin_model_()']]],
+  ['prev_5flams_5f_1029',['prev_lams_',['../structproxddp_1_1WorkspaceTpl.html#aac25aea644b9d271feaffe0d9dd62302',1,'proxddp::WorkspaceTpl']]],
+  ['prev_5fus_5f_1030',['prev_us_',['../structproxddp_1_1WorkspaceTpl.html#ac0bbc8c2e58d91ecd0a4bc6365963cf3',1,'proxddp::WorkspaceTpl']]],
+  ['prev_5fxs_5f_1031',['prev_xs_',['../structproxddp_1_1WorkspaceTpl.html#a89ed30515053398cf6550167515aa8b5',1,'proxddp::WorkspaceTpl']]],
+  ['prim_5falpha_1032',['prim_alpha',['../structproxddp_1_1BCLParams.html#a9ba2db04d464627efe6b3df97aa74c91',1,'proxddp::BCLParams']]],
+  ['prim_5fbeta_1033',['prim_beta',['../structproxddp_1_1BCLParams.html#ae26374b8b1da1fa4396d7653a95745ab',1,'proxddp::BCLParams']]],
+  ['prim_5ferr_1034',['prim_err',['../structproxddp_1_1LogRecord.html#a735df932e994a72ecbd5738e689fd50d',1,'proxddp::LogRecord']]],
+  ['prim_5finfeas_1035',['prim_infeas',['../structproxddp_1_1helpers_1_1history__callback.html#a6770f89e3c1a6cb17f7e0b9852208509',1,'proxddp::helpers::history_callback']]],
+  ['prim_5ftol0_1036',['prim_tol0',['../structproxddp_1_1SolverProxDDP.html#a7c9f5cdeb4ec9b19b92661be88b23453',1,'proxddp::SolverProxDDP']]],
+  ['prim_5ftol_5f_1037',['prim_tol_',['../structproxddp_1_1SolverProxDDP.html#a8a6fff5cd8018cff77a689c0180eab96',1,'proxddp::SolverProxDDP']]],
+  ['prim_5ftols_1038',['prim_tols',['../structproxddp_1_1helpers_1_1history__callback.html#adad8c2a95387f1ebae20a78fd1d63cbc',1,'proxddp::helpers::history_callback']]],
+  ['primal_5finfeas_5fby_5fstage_1039',['primal_infeas_by_stage',['../structproxddp_1_1WorkspaceTpl.html#a7da521d9b6864653487a79a83afc9e3a',1,'proxddp::WorkspaceTpl']]],
+  ['primal_5finfeasibility_1040',['primal_infeasibility',['../structproxddp_1_1ResultsTpl.html#a148691658a535dac3540acc19452f39d',1,'proxddp::ResultsTpl']]],
+  ['problem_5fdata_1041',['problem_data',['../structproxddp_1_1WorkspaceTpl.html#a2306ce08de5313f156a25e16dc279eb8',1,'proxddp::WorkspaceTpl']]],
+  ['prox_5fdatas_1042',['prox_datas',['../structproxddp_1_1WorkspaceTpl.html#a93cf10108d126c3de75ad6f4ae5208be',1,'proxddp::WorkspaceTpl']]],
+  ['prox_5fpenalties_5f_1043',['prox_penalties_',['../structproxddp_1_1SolverProxDDP.html#a571457e0b5e978c730cce41aee6f0480',1,'proxddp::SolverProxDDP']]],
+  ['prox_5fsettings_5f_1044',['prox_settings_',['../structproxddp_1_1dynamics_1_1MultibodyConstraintFwdDynamicsTpl.html#a600dcaae09065f0a599e57a914405b74',1,'proxddp::dynamics::MultibodyConstraintFwdDynamicsTpl']]],
+  ['prox_5fvalue_1045',['prox_value',['../structproxddp_1_1PDALFunction.html#a18704d972ceaa00b8b839521659b7118',1,'proxddp::PDALFunction']]]
+];
