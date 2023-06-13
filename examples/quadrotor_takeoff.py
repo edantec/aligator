@@ -126,10 +126,9 @@ class DiffSimDyamicsModel(ExplicitDynamicsModel):
         data.x_tens_ = torch.tensor(x, requires_grad=True)
         data.u_tens_ = torch.tensor(u, requires_grad=True)
         act_tens = torch.from_numpy(self.act)
-        noise_u = self.noise_intensity*torch.randn((self.N_samples,)+data.u_tens_.size())
         data.xnext_tens_ = torch.zeros_like(data.x_tens_)
         for i in range(self.N_samples):
-            u_noisy = data.u_tens_+ noise_u[i]
+            u_noisy = data.u_tens_+ data.u_noise[i]
             data.xnext_tens_ += self.sim.makeStep(data.x_tens_, act_tens @ u_noisy, calcPinDiff=True)
         data.xnext_tens_ /= self.N_samples
         data.xnext[:] = data.xnext_tens_.detach().numpy()
@@ -141,11 +140,17 @@ class DiffSimDyamicsModel(ExplicitDynamicsModel):
             data.Jx[i,:]  = grads[0].detach().numpy()
             data.Ju[i,:] = grads[1].detach().numpy()
         return
+    
+    def computeJacobians(self, x, u, y, data):
+        print("calling computeJacobians custom")
+        data.u_noise = self.noise_intensity*torch.randn((self.N_samples,)+data.u_tens_.size())
+        ExplicitDynamicsData.computeJacobians(x,u,y,data)
 
     def createData(self) -> ExplicitDynamicsData:
         data = ExplicitDynamicsData(self.space.ndx, self.nu, self.nx2, self.ndx2)
+        data.u_tens_ = torch.zeros(self.nu)
+        data.u_noise = torch.zeros((self.N_samples,)+data.u_tens_.size())
         # shape_xnext = data.xnext.shape
-        # data.u_tens_ = torch.zeros(self.nu)
         # data.x_tens_ = torch.zeros(shape_xnext)
         # data.xnext_tens_ = torch.zeros(shape_xnext)
         return data
