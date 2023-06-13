@@ -86,9 +86,12 @@ ROT_NULL = np.eye(3)
 if False:
     vizer = init_viewer_ellipsoids(rmodel, rgeom_model,rvisual_model, open=True)
     q_init = 1*rmodel.referenceConfigurations["standing"]
-    # q_init[2] += .35  # moves solo up a bit, otherwise it's in the ground
     vizer.display(q_init)
     input("Displaying q_init, press enter to visualize target configuration")
+    q_target = 1*rmodel.referenceConfigurations["standing"]
+    q_target[2] += .1
+    vizer.display(q_target)
+    input()
     exit()
 
 class Args(ArgsBase):
@@ -201,11 +204,59 @@ def main(args: Args):
     u0, _, _, _ = np.linalg.lstsq(act_matrix, tau)
     u0 = np.zeros(nu)
 
-    us_init = [u0] * nsteps
-    xs_init = [x0] * (nsteps + 1)
+    def constraint_quasistatic_torque(nodes, x0, u0, S):
+        B = torch.zeros((nv, nv))  # B is the actuation matrix when u is control including FF
+        B[6:, 6:] = torch.eye(nv - 6)
+        def compute_static_torque(node, x, u, S):
+            print(f"x: {x}, u: {u}")
+            x_next = node.makeStep(torch.tensor(x), torch.tensor(S @ u), calcPinDiff=True)
+            model = node.rmodel
+            data = model.createData()
+            q = node.rdata.q
+            print(f"q: {q}")
+
+            u_static = pin.rnea(model, data, q, np.zeros(model.nv), np.zeros(model.nv))  # len(u_static) = 14
+            Jn = node.rdata.Jn_
+            Jt = node.rdata.Jt_
+            A = (torch.vstack((B, Jn, Jt)).T).detach().numpy()
+            tau_lamN_lamT = np.linalg.pinv(A) @ u_static
+
+            tau_static = tau_lamN_lamT[:model.nv]
+            tau_static_ = torch.tensor(tau_static)
+            lamN_static = tau_lamN_lamT[model.nv:model.nv+4]
+            lamT_static = tau_lamN_lamT[model.nv+4:]
+
+            print(f"tau_static: {tau_static}")
+            # print(f"lamN_static: {lamN_static}")
+            # print(f"lamT_static: {lamT_static}")
+
+            return tau_static_[6:].detach().numpy(), x_next.detach().numpy()
+
+        u_list, x_list = [], [x0]
+        first_node = nodes[0]
+        print(f"first_node")
+        u, _ = compute_static_torque(first_node, x0, u0, S)
+
+        x = 1*x0
+        print("other nodes")
+        for node in nodes:
+            u, x = compute_static_torque(node, x, u, S)
+            u_list.append(1*u)
+            x_list.append(1*x)
+        return u_list, x_list
+
+    sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
+
+    # compute initial guess
+    us_init, xs_init = constraint_quasistatic_torque(
+        sim_nodes, x0, u0, act_matrix
+    )
+
+    # us_init = [u0] * nsteps
+    # xs_init = [x0] * (nsteps + 1)
 
     x_tar1 = 1*x0
-    x_tar1[2] += 0.1
+    # x_tar1[2] += 0.1  # jump up
     # add_objective_vis_models(x_tar1)
 
     u_max = rmodel.effortLimit[-6:]
@@ -366,7 +417,6 @@ def main(args: Args):
             d /= np.linalg.norm(d)
 
         vid_uri = "assets/{}.mp4".format(TAG)
-        print("here")
         qs_opt = [pin.integrate(rmodel, rmodel.qref,x[:nv]) for x in xs_opt]
         base_link_id = rmodel.getFrameId("base_link")
 
