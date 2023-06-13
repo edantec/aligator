@@ -121,6 +121,7 @@ class DiffSimDyamicsModel(ExplicitDynamicsModel):
         self.sim = SimulatorNode(Simulator(model, geom_model, dt, coeff_friction, coeff_rest, dt_collision=dt, eps_contact=1e-3))
         self.N_samples = N_samples
         self.noise_intensity = noise_intensity
+        self.resample_noise = True
 
     def forward(self, x, u, data):
         data.x_tens_ = torch.tensor(x, requires_grad=True)
@@ -141,10 +142,10 @@ class DiffSimDyamicsModel(ExplicitDynamicsModel):
             data.Ju[i,:] = grads[1].detach().numpy()
         return
     
-    def computeJacobians(self, x, u, y, data):
-        print("calling computeJacobians custom")
-        data.u_noise = self.noise_intensity*torch.randn((self.N_samples,)+data.u_tens_.size())
-        ExplicitDynamicsData.computeJacobians(x,u,y,data)
+    # def computeJacobians(self, x, u, y, data):
+    #     print("calling computeJacobians custom")
+    #     data.u_noise = self.noise_intensity*torch.randn((self.N_samples,)+data.u_tens_.size())
+    #     ExplicitDynamicsData.computeJacobians(x,u,y,data)
 
     def createData(self) -> ExplicitDynamicsData:
         data = ExplicitDynamicsData(self.space.ndx, self.nu, self.nx2, self.ndx2)
@@ -154,6 +155,29 @@ class DiffSimDyamicsModel(ExplicitDynamicsModel):
         # data.x_tens_ = torch.zeros(shape_xnext)
         # data.xnext_tens_ = torch.zeros(shape_xnext)
         return data
+    
+class RSCallback(proxddp.BaseCallback):
+    def __init__(self):
+        super().__init__()
+        self.active_sets = []
+        self.x_dirs = []
+        self.u_dirs = []
+        self.lams = []
+        self.Qus = []
+        self.kkts = []
+
+    def call(self, workspace: proxddp.Workspace, results: proxddp.Results):
+        import copy
+
+        self.active_sets.append(workspace.active_constraints.tolist())
+        self.x_dirs.append(copy.deepcopy(workspace.dxs.tolist()))
+        self.u_dirs.append(copy.deepcopy(workspace.dus.tolist()))
+        self.lams.append(copy.deepcopy(results.lams.tolist()))
+        Qus = [qq.Qu.copy() for qq in workspace.q_params]
+        self.Qus.append(Qus)
+        kkts = workspace.kkt_mat
+        self.kkts.append(copy.deepcopy(kkts))
+
 
 
 
@@ -213,7 +237,7 @@ def main(args: Args):
     nsteps = int(Tf / dt)
     print("nsteps: {:d}".format(nsteps))
 
-    dynmodel = DiffSimDyamicsModel(space, rmodel, QUAD_ACT_MATRIX, rgeom_model, coeff_friction, coeff_rest,nu, dt)
+    dynmodel = DiffSimDyamicsModel(space, rmodel, QUAD_ACT_MATRIX, rgeom_model, coeff_friction, coeff_rest,nu, dt, N_samples=1, noise_intensity=0.)
 
     q0 = 1*rmodel.qref
     q0[2] = 1.87707555e-01 
@@ -222,7 +246,7 @@ def main(args: Args):
 
     tau = pin.rnea(rmodel, rdata, q0, np.zeros(nv), np.zeros(nv))
     u0, _, _, _ = np.linalg.lstsq(QUAD_ACT_MATRIX, tau)
-    u0 = np.zeros(nu)
+    # u0 = np.zeros(nu)
 
     us_init = [u0] * nsteps
     xs_init = [x0] * (nsteps + 1)
@@ -308,6 +332,7 @@ def main(args: Args):
     tol = 1e-3
     verbose = proxddp.VerboseLevel.VERBOSE
     history_cb = proxddp.HistoryCallback()
+    rs_cb = RSCallback()
     solver = proxddp.SolverFDDP(tol, verbose=verbose)
     if args.proxddp:
         mu_init = 1e-1
@@ -315,6 +340,7 @@ def main(args: Args):
         solver = proxddp.SolverProxDDP(tol, mu_init, rho_init, verbose=verbose)
     solver.max_iters = 200
     solver.registerCallback("his", history_cb)
+    # solver.registerCallback("rs", rs_cb)
     solver.setup(problem)
     solver.run(problem, xs_init, us_init)
 
