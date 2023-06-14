@@ -80,6 +80,51 @@ def create_quadrotor_model():
     
     return rmodel, rgeom_model, rvisual_model, rdata, rgeom_data, QUAD_ACT_MATRIX
 
+def create_solo_model():
+    robot = erd.load('solo12')
+    rmodel = robot.model.copy()
+    rdata = rmodel.createData()
+    rmodel.qref = rmodel.referenceConfigurations["standing"]
+    rmodel.qinit = rmodel.referenceConfigurations["standing"]
+    # Geometry model
+    rgeomModel = robot.collision_model
+    # add feet
+    a = 0.01910275
+    r = np.array([a, a, a])  
+    
+    rgeomModel.computeColPairDist = []
+
+    n = np.array([0., 0., 1])
+    p = np.array([0., 0., 0.0])
+    h = np.array([100., 100., 0.01])
+    plane_shape = Plane(0, 'plane', n, p, h)
+    T = pin.SE3(plane_shape.R, plane_shape.t)
+    plane = pin.GeometryObject("plane", 0, 0, plane_shape, T)
+    plane.meshColor = np.array([0.5, 0.5, 0.5, 1.]) 
+    planeId = rgeomModel.addGeometryObject(plane)
+    
+    frames_names = ["HR_FOOT","HL_FOOT","FR_FOOT","FL_FOOT"]
+        
+    rgeomModel.collision_pairs = []
+    for name in frames_names:
+        frame_id = rmodel.getFrameId(name)
+        frame = rmodel.frames[frame_id]
+        joint_id = frame.parent
+        frame_placement = frame.placement
+        
+        shape_name = name + "_shape"
+        shape = Ellipsoid(joint_id, shape_name , r, frame_placement)
+        geometry = pin.GeometryObject(shape_name, joint_id, shape, frame_placement)
+        geometry.meshColor = np.array([1.0, 0.2, 0.2, 1.])
+        
+        geom_id = rgeomModel.addGeometryObject(geometry)
+        
+        foot_plane = CollisionPairPlaneEllipsoid(planeId, geom_id)
+        rgeomModel.collision_pairs += [foot_plane]
+        rgeomModel.computeColPairDist.append(False)
+    rgeom_data = rgeomModel.createData()
+    ddl = np.array([i for i in range(6,rmodel.nv)])
+    return rmodel, rgeomModel, robot.visual_model, rdata, rgeom_data, ddl
 
 
 class DiffSimDyamicsModel(ExplicitDynamicsModel):
