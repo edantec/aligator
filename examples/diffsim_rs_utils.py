@@ -117,10 +117,10 @@ class DiffSimDyamicsModel(ExplicitDynamicsModel):
     def createData(self) -> ExplicitDynamicsData:
         data = ExplicitDynamicsData(self.space.ndx, self.nu, self.nx2, self.ndx2)
         data.u_tens_ = torch.zeros(self.nu)
-        # data.u_noise = torch.zeros((self.N_samples,)+data.u_tens_.size())
-        # data.resample_noise = True
-        # data.N_samples = self.N_samples
-        # data.noise_intensity = self.noise_intensity
+        data.resample_noise = False
+        data.N_samples = 1
+        data.noise_intensity = 0.0
+        data.u_noise = torch.zeros((data.N_samples,)+data.u_tens_.size())
         # shape_xnext = data.xnext.shape
         # data.x_tens_ = torch.zeros(shape_xnext)
         # data.xnext_tens_ = torch.zeros(shape_xnext)
