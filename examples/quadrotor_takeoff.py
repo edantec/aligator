@@ -114,24 +114,26 @@ class Args(ArgsBase):
 
 class DiffSimDyamicsModel(ExplicitDynamicsModel):
 
-    def __init__(self, space, model, actuation, geom_model, coeff_friction, coeff_rest, nu: int, dt: float, N_samples : int = 1, noise_intensity: float = 0.) -> None:
+    def __init__(self, space, model, actuation, geom_model, coeff_friction, coeff_rest, nu: int, dt: float) -> None:
         super().__init__(space, nu)
         self.act = actuation
         self.dt = dt
         self.sim = SimulatorNode(Simulator(model, geom_model, dt, coeff_friction, coeff_rest, dt_collision=dt, eps_contact=1e-3))
-        self.N_samples = N_samples
-        self.noise_intensity = noise_intensity
-        self.resample_noise = True
+        # self.N_samples = N_samples
+        # self.noise_intensity = noise_intensity
 
     def forward(self, x, u, data):
         data.x_tens_ = torch.tensor(x, requires_grad=True)
         data.u_tens_ = torch.tensor(u, requires_grad=True)
         act_tens = torch.from_numpy(self.act)
         data.xnext_tens_ = torch.zeros_like(data.x_tens_)
-        for i in range(self.N_samples):
+        if data.resample_noise:
+            data.u_noise = data.noise_intensity*torch.randn((data.N_samples,)+data.u_tens_.size())
+            data.resample_noise = False
+        for i in range(data.N_samples):
             u_noisy = data.u_tens_+ data.u_noise[i]
             data.xnext_tens_ += self.sim.makeStep(data.x_tens_, act_tens @ u_noisy, calcPinDiff=True)
-        data.xnext_tens_ /= self.N_samples
+        data.xnext_tens_ /= data.N_samples
         data.xnext[:] = data.xnext_tens_.detach().numpy()
         return
     
@@ -150,33 +152,27 @@ class DiffSimDyamicsModel(ExplicitDynamicsModel):
     def createData(self) -> ExplicitDynamicsData:
         data = ExplicitDynamicsData(self.space.ndx, self.nu, self.nx2, self.ndx2)
         data.u_tens_ = torch.zeros(self.nu)
-        data.u_noise = torch.zeros((self.N_samples,)+data.u_tens_.size())
+        # data.u_noise = torch.zeros((self.N_samples,)+data.u_tens_.size())
+        # data.resample_noise = True
+        # data.N_samples = self.N_samples
+        # data.noise_intensity = self.noise_intensity
         # shape_xnext = data.xnext.shape
         # data.x_tens_ = torch.zeros(shape_xnext)
         # data.xnext_tens_ = torch.zeros(shape_xnext)
         return data
     
 class RSCallback(proxddp.BaseCallback):
-    def __init__(self):
+    def __init__(self, N_samples : int = 1, noise_intensity : float = 0.):
         super().__init__()
-        self.active_sets = []
-        self.x_dirs = []
-        self.u_dirs = []
-        self.lams = []
-        self.Qus = []
-        self.kkts = []
+        self.N_samples = N_samples
+        self.noise_intensity = noise_intensity
 
     def call(self, workspace: proxddp.Workspace, results: proxddp.Results):
-        import copy
-
-        self.active_sets.append(workspace.active_constraints.tolist())
-        self.x_dirs.append(copy.deepcopy(workspace.dxs.tolist()))
-        self.u_dirs.append(copy.deepcopy(workspace.dus.tolist()))
-        self.lams.append(copy.deepcopy(results.lams.tolist()))
-        Qus = [qq.Qu.copy() for qq in workspace.q_params]
-        self.Qus.append(Qus)
-        kkts = workspace.kkt_mat
-        self.kkts.append(copy.deepcopy(kkts))
+        for sdi in workspace.problem_data.stage_data:
+            for cdj in sdi.constraint_data:
+                cdj.resample_noise = True
+                cdj.N_samples = self.N_samples
+                cdj.noise_intensity = self.noise_intensity
 
 
 
@@ -237,7 +233,7 @@ def main(args: Args):
     nsteps = int(Tf / dt)
     print("nsteps: {:d}".format(nsteps))
 
-    dynmodel = DiffSimDyamicsModel(space, rmodel, QUAD_ACT_MATRIX, rgeom_model, coeff_friction, coeff_rest,nu, dt, N_samples=1, noise_intensity=0.)
+    dynmodel = DiffSimDyamicsModel(space, rmodel, QUAD_ACT_MATRIX, rgeom_model, coeff_friction, coeff_rest,nu, dt)
 
     q0 = 1*rmodel.qref
     q0[2] = 1.87707555e-01 
@@ -329,20 +325,36 @@ def main(args: Args):
     # input()
 
 
+    N_samples_init = 4
+    noise_intensity_init = 1.
+    max_rsddp_iter = 6
     tol = 1e-3
     verbose = proxddp.VerboseLevel.VERBOSE
     history_cb = proxddp.HistoryCallback()
-    rs_cb = RSCallback()
+    rs_cb = RSCallback(N_samples_init, noise_intensity_init)
     solver = proxddp.SolverFDDP(tol, verbose=verbose)
     if args.proxddp:
         mu_init = 1e-1
         rho_init = 0.0
         solver = proxddp.SolverProxDDP(tol, mu_init, rho_init, verbose=verbose)
-    solver.max_iters = 200
+    solver.max_iters = 4
     solver.registerCallback("his", history_cb)
-    # solver.registerCallback("rs", rs_cb)
+    solver.registerCallback("rs", rs_cb)
     solver.setup(problem)
-    solver.run(problem, xs_init, us_init)
+    results = solver.getResults()
+    workspace = solver.getWorkspace()
+    solver.getCallback("rs").call(workspace, results)
+
+    for i in range(max_rsddp_iter):
+        print("current noise:", solver.getCallback("rs").noise_intensity)
+        solver.run(problem, xs_init, us_init)
+        if solver.getCallback("rs").noise_intensity <1e-3:
+            break
+        else:
+            results = solver.getResults()
+            xs_init = results.xs
+            us_init = results.us
+            solver.getCallback("rs").noise_intensity /= 2.
 
     results = solver.getResults()
     workspace = solver.getWorkspace()
