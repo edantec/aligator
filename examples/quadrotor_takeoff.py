@@ -233,7 +233,7 @@ def main(args: Args):
     nsteps = int(Tf / dt)
     print("nsteps: {:d}".format(nsteps))
 
-    dynmodel = DiffSimDyamicsModel(space, rmodel, QUAD_ACT_MATRIX, rgeom_model, coeff_friction, coeff_rest,nu, dt, N_samples=1, noise_intensity=0.)
+    dynmodel = DiffSimDyamicsModel(space, rmodel, QUAD_ACT_MATRIX, rgeom_model, coeff_friction, coeff_rest,nu, dt)
 
     q0 = 1*rmodel.qref
     q0[2] = 1.87707555e-01 
@@ -327,7 +327,7 @@ def main(args: Args):
 
     N_samples_init = 4
     noise_intensity_init = 1.
-    max_rsddp_iter = 6
+    max_rsddp_iter = 3
     tol = 1e-3
     verbose = proxddp.VerboseLevel.VERBOSE
     history_cb = proxddp.HistoryCallback()
@@ -337,7 +337,7 @@ def main(args: Args):
         mu_init = 1e-1
         rho_init = 0.0
         solver = proxddp.SolverProxDDP(tol, mu_init, rho_init, verbose=verbose)
-    solver.max_iters = 4
+    solver.max_iters = 6
     solver.registerCallback("his", history_cb)
     solver.registerCallback("rs", rs_cb)
     solver.setup(problem)
