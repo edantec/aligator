@@ -192,6 +192,7 @@ def main(args: Args):
             )
             rcost.addCost(xreg_cost)
             ureg_cost = proxddp.QuadraticControlCost(space, nu, w_u * dt)
+            ureg_cost.target = us_init[0]
             rcost.addCost(ureg_cost)
 
             stage = proxddp.StageModel(rcost, dynmodel)
