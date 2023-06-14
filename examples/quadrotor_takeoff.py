@@ -233,7 +233,7 @@ def main(args: Args):
     nsteps = int(Tf / dt)
     print("nsteps: {:d}".format(nsteps))
 
-    dynmodel = DiffSimDyamicsModel(space, rmodel, QUAD_ACT_MATRIX, rgeom_model, coeff_friction, coeff_rest,nu, dt)
+    dynmodel = DiffSimDyamicsModel(space, rmodel, QUAD_ACT_MATRIX, rgeom_model, coeff_friction, coeff_rest,nu, dt, N_samples=1, noise_intensity=0.)
 
     q0 = 1*rmodel.qref
     q0[2] = 1.87707555e-01 
