@@ -17,6 +17,10 @@ from proxnlp import constraints
 from diffsim_rs_utils import create_quadrotor_model, DiffSimDyamicsModel, RSCallback
 
 from utils import ArgsBase
+import torch
+
+torch.manual_seed(1234)
+np.random.seed(1234)
 
 rmodel, rgeom_model, rvisual_model, rdata, rgeom_data, _ = create_quadrotor_model()
 nq = rmodel.nq
@@ -117,7 +121,7 @@ def main(args: Args):
     def get_task_schedule():
         weights1 = np.zeros(space.ndx)
         weights1[:3] = 4.0
-        weights1[3:6] = 1e-2
+        weights1[3:6] = 1e-1
         weights1[nv:] = 1e-3
 
         def weight_target_selector(i):
@@ -130,7 +134,7 @@ def main(args: Args):
     task_schedule = get_task_schedule()
 
     def setup():
-        w_u = np.eye(nu) * 1e-2
+        w_u = np.eye(nu) * 1e-3
         stages = []
         if args.bounds:
             u_identity_fn = proxddp.ControlErrorResidual(space.ndx, np.zeros(nu))
