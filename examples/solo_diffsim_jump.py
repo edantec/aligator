@@ -15,11 +15,10 @@ import meshcat
 
 from proxnlp import constraints
 from proxddp import manifolds
-from proxddp.dynamics import ExplicitDynamicsModel, ExplicitDynamicsData
 from utils import ArgsBase
 
 from diffsim.utils_render import init_viewer_ellipsoids
-from diffsim_rs_utils import create_solo_model, DiffSimDyamicsModel
+from diffsim_rs_utils import create_solo_model, DiffSimDyamicsModel, RSCallback
 from diffsim.simulator import Simulator, SimulatorNode
 
 
@@ -27,6 +26,7 @@ rmodel, rgeom_model, rvisual_model, rdata, rgeom_data, _ = create_solo_model()
 nq = rmodel.nq
 nv = rmodel.nv
 ROT_NULL = np.eye(3)
+run_name = "solo_foot_up"
 
 if False:
     vizer = init_viewer_ellipsoids(rmodel, rgeom_model,rvisual_model, open=True)
@@ -34,7 +34,8 @@ if False:
     vizer.display(q_init)
     input("Displaying q_init, press enter to visualize target configuration")
     q_target = 1*rmodel.referenceConfigurations["standing"]
-    q_target[2] += .1
+    # q_target[2] += .1
+    q_target[9] -= .5
     vizer.display(q_target)
     input()
     exit()
@@ -67,11 +68,11 @@ def main(args: Args):
         rvisual_model.addGeometryObject(plane_obj)
         rgeom_model.addGeometryObject(plane_obj)
 
-    def add_objective_vis_models(x_tar1):
+    def add_objective_vis_models(x_tar):
         """Add visual guides for the objectives."""
         objective_color = np.array([5, 104, 143, 200]) / 255.0
         sp1_obj = pin.GeometryObject(
-            "obj1", 0, pin.SE3(ROT_NULL, x_tar1[:3]), fcl.Sphere(0.05)
+            "obj1", 0, pin.SE3(ROT_NULL, x_tar[:3]), fcl.Sphere(0.05)
         )
         sp1_obj.meshColor[:] = objective_color
         rvisual_model.addGeometryObject(sp1_obj)
@@ -82,7 +83,12 @@ def main(args: Args):
     nu = nv - 6
     act_matrix = np.eye(nv, nu, -6)
 
-    coeff_friction = 0.9
+    N_samples_init = 1
+    noise_intensity_init = 0.
+    max_rsddp_iter = 1
+    max_iters = 100
+
+    coeff_friction = 0.4
     coeff_rest = 0.0
     # dt = 0.01
     # Tf = 1.5
@@ -120,8 +126,8 @@ def main(args: Args):
 
             tau_static = tau_lamN_lamT[:model.nv]
             tau_static_ = torch.tensor(tau_static)
-            lamN_static = tau_lamN_lamT[model.nv:model.nv+4]
-            lamT_static = tau_lamN_lamT[model.nv+4:]
+            # lamN_static = tau_lamN_lamT[model.nv:model.nv+4]
+            # lamT_static = tau_lamN_lamT[model.nv+4:]
 
             # print(f"tau_static: {tau_static}")
             # print(f"lamN_static: {lamN_static}")
@@ -149,33 +155,30 @@ def main(args: Args):
     # us_init = [u0] * nsteps
     # xs_init = [x0] * (nsteps + 1)
 
-    x_tar1 = 1*x0
-    # x_tar1[2] -= 0.05  # go down
-    x_tar1[2] += 0.1  # jump up
-    # add_objective_vis_models(x_tar1)
+    x_tar = 1*x0
+    # x_tar[2] += 0.04  # go down
+    # x_tar[2] += 0.1  # jump up
+    x_tar[8] -= 0.5  # foot up
+    # add_objective_vis_models(x_tar)
 
     u_max = rmodel.effortLimit[-6:]
     u_min = -1*u_max
 
     times = np.linspace(0, Tf, nsteps + 1)
 
-    def get_task_schedule():
-        weights1 = np.zeros(space.ndx)
-        weights1[:3] = 4.0
-        weights1[3:6] = 1e-2
-        weights1[nv:] = 1e-3
+    print(f"RUN: {run_name} + target: {x_tar}")
 
-        def weight_target_selector(i):
-            x_tar = x_tar1
-            weights = weights1
-            return weights, x_tar
-
-        return weight_target_selector
-
-    task_schedule = get_task_schedule()
+    def get_task():
+        weights = np.zeros(space.ndx)
+        # weights[:3] = 4.0
+        # weights[3:6] = 1e-2
+        # weights[nv:] = 1e-3
+        weights[:nv] = 1.0
+        weights[nv:] = 1e-3
+        return weights, x_tar
 
     def setup():
-        w_u = np.eye(nu) * 1e-2
+        w_u = np.eye(nu) * 1e-4
         stages = []
         if args.bounds:
             u_identity_fn = proxddp.ControlErrorResidual(space.ndx, np.zeros(nu))
@@ -185,7 +188,7 @@ def main(args: Args):
         for i in range(nsteps):
             rcost = proxddp.CostStack(space, nu)
 
-            weights, x_tar = task_schedule(i)
+            weights, x_tar = get_task()
 
             xreg_cost = proxddp.QuadraticStateCost(
                 space, nu, x_tar, np.diag(weights) * dt
@@ -200,7 +203,8 @@ def main(args: Args):
                 stage.addConstraint(ctrl_cstr)
             stages.append(stage)
 
-        weights, x_tar = task_schedule(nsteps)
+        weights, x_tar = get_task()
+
         if not args.term_cstr:
             weights *= 10.0
         term_cost = proxddp.QuadraticStateCost(space, nu, x_tar, np.diag(weights))
@@ -218,22 +222,36 @@ def main(args: Args):
     tol = 1e-3
     verbose = proxddp.VerboseLevel.VERBOSE
     history_cb = proxddp.HistoryCallback()
+    rs_cb = RSCallback(N_samples_init, noise_intensity_init)
     solver = proxddp.SolverFDDP(tol, verbose=verbose)
     if args.proxddp:
         mu_init = 1e-1
         rho_init = 0.0
         solver = proxddp.SolverProxDDP(tol, mu_init, rho_init, verbose=verbose)
-    solver.max_iters = 200
+    solver.max_iters = max_iters
     solver.registerCallback("his", history_cb)
+    solver.registerCallback("rs", rs_cb)
     solver.setup(problem)
-    solver.run(problem, xs_init, us_init)
+
+    results = solver.getResults()
+    workspace = solver.getWorkspace()
+    solver.getCallback("rs").call(workspace, results)  # init noise
+
+
+    for i in range(max_rsddp_iter):
+        print("current noise:", solver.getCallback("rs").noise_intensity)
+        solver.run(problem, xs_init, us_init)
+        if solver.getCallback("rs").noise_intensity <1e-3:
+            break
+        else:
+            results = solver.getResults()
+            xs_init = results.xs
+            us_init = results.us
+            solver.getCallback("rs").noise_intensity /= 2.
 
     results = solver.getResults()
     workspace = solver.getWorkspace()
     print(results)
-
-    xs_opt = results.xs.tolist()
-    us_opt = results.us.tolist()
 
     val_grad = [vp.Vx for vp in workspace.value_params]
 
