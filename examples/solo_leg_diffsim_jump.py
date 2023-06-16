@@ -80,7 +80,7 @@ def main(args: Args):
     os.makedirs("assets", exist_ok=True)
     print(args)
 
-    if args.display:
+    if args.display and False:
         # 1st arg is the plane normal
         # 2nd arg is offset from origin
         plane = fcl.Plane(np.array([0.0, 0.0, 1.0]), 0.0)
@@ -94,10 +94,10 @@ def main(args: Args):
         """Add visual guides for the objectives."""
         objective_color = np.array([5, 104, 143, 200]) / 255.0
         sp1_obj = pin.GeometryObject(
-            "obj1", 0, pin.SE3(ROT_NULL, x_tar[:3]), fcl.Sphere(5.)
+            "obj1", 0, pin.SE3(ROT_NULL, x_tar[:3]), fcl.Sphere(0.05)
         )
         sp1_obj.meshColor[:] = objective_color
-        rvisual_model.addGeometryObject(sp1_obj)
+        rgeom_model.addGeometryObject(sp1_obj)
 
     nx = 2*rmodel.nv
     nu = nv - 1
@@ -232,7 +232,7 @@ def main(args: Args):
     if args.augmented:
         x_tar = np.concatenate([x_tar, np.zeros(nu), np.zeros(nu)])
 
-    add_objective_vis_models(np.array([0.0, 0.0, x_tar[0]]))
+    add_objective_vis_models(np.array([0.0, 0.0, q_init[0] + x_tar[0]]))
 
     u_max = rmodel.effortLimit[1:]*1e-2
     u_min = -1*u_max
@@ -435,7 +435,7 @@ def main(args: Args):
         input("[enter to play]")
         while True:
             vizer.play(qs_opt, dt*3)
-            vizer.display(qs_opt[0])
+            vizer.display(qs_opt[-1])
             a = input("press to continue, [q] to quit")
             if a == "q":
                 break
