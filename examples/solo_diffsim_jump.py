@@ -18,7 +18,7 @@ from proxddp import manifolds
 from utils import ArgsBase
 
 from diffsim.utils_render import init_viewer_ellipsoids
-from diffsim_rs_utils import create_solo_model, DiffSimDyamicsModel, RSCallback
+from diffsim_rs_utils import create_solo_model, DiffSimDynamicsModel, RSCallback
 from diffsim.simulator import Simulator, SimulatorNode
 
 
@@ -97,7 +97,7 @@ def main(args: Args):
     nsteps = int(Tf / dt)
     print("nsteps: {:d}".format(nsteps))
 
-    dynmodel = DiffSimDyamicsModel(space, rmodel, act_matrix, rgeom_model, coeff_friction, coeff_rest,nu, dt)
+    dynmodel = DiffSimDynamicsModel(space, rmodel, act_matrix, rgeom_model, coeff_friction, coeff_rest,nu, dt)
 
     q0 = 1*rmodel.qref
     dq0 = pin.difference(rmodel, rmodel.qref, q0)

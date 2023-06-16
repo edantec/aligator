@@ -19,7 +19,7 @@ from proxddp import manifolds
 from utils import ArgsBase
 
 from diffsim.utils_render import init_viewer_ellipsoids
-from diffsim_rs_utils import create_solo_leg_model, DiffSimDyamicsModel, RSCallback
+from diffsim_rs_utils import DiffSimDynamicsModel, RSCallback, DiffSimDynamicsModelAugmented
 from diffsim.simulator import Simulator, SimulatorNode
 
 from robot_properties_teststand.config import TeststandConfig
@@ -34,11 +34,24 @@ ROT_NULL = np.eye(3)
 run_name = "solo_foot_up"
 
 q_init = 1*teststand_config.q0
+# q_init = pin.neutral(rmodel)
+# q_init[0] = .33
+# q_init[1] = 0.2
+# q_init[2] = -0.4
 
 if 0:
     vizer = init_viewer_ellipsoids(rmodel, rgeom_model, rgeom_model, open=True)
-    q_init = pin.neutral(rmodel)
-    q_init[0] = .35
+    # streched configuration
+    # q_init = pin.neutral(rmodel)
+    # q_init[0] = .335
+
+    # small angle
+    # q_init = pin.neutral(rmodel)
+    # q_init[0] = .33
+    # q_init[1] = 0.2
+    # q_init[2] = -0.4
+
+
     vizer.display(q_init)
     input("Displaying q_init, press enter to visualize target configuration")
     q_target = 1*q_init
@@ -56,6 +69,7 @@ class Args(ArgsBase):
     display: bool = False
     term_cstr: bool = False
     proxddp: bool = False
+    augmented: bool = False
 
     def process_args(self):
         if self.record:
@@ -86,9 +100,12 @@ def main(args: Args):
         rvisual_model.addGeometryObject(sp1_obj)
 
     nx = 2*rmodel.nv
-    space = manifolds.VectorSpace(nx)
-
     nu = nv - 1
+    if args.augmented:
+        space = manifolds.VectorSpace(nx + 2*nu)
+    else:
+        space = manifolds.VectorSpace(nx)
+
     act_matrix = np.eye(nv, nu, -1)
 
     N_samples_init = 1
@@ -96,18 +113,22 @@ def main(args: Args):
     max_rsddp_iter = 1
     max_iters = 100
 
-    coeff_friction = 0.15
+    coeff_friction = 0.7
     coeff_rest = 0.0
     # dt = 0.01
     # Tf = 1.5
     dt = 5e-3
-    Tf = 0.05
+    Tf = 0.1
     nsteps = int(Tf / dt)
     print("nsteps: {:d}".format(nsteps))
 
-    dynmodel = DiffSimDyamicsModel(space, rmodel, act_matrix, rgeom_model, coeff_friction, coeff_rest,nu, dt)
+    if args.augmented:
+        dynmodel = DiffSimDynamicsModelAugmented(space, rmodel, act_matrix, rgeom_model, coeff_friction, coeff_rest, nu, dt)
+    else:
+        dynmodel = DiffSimDynamicsModel(space, rmodel, act_matrix, rgeom_model, coeff_friction, coeff_rest,nu, dt)
 
-    q0 = 1*rmodel.qref
+
+    q0 = 1*q_init
     dq0 = pin.difference(rmodel, rmodel.qref, q0)
     x0 = np.concatenate([dq0, np.zeros(nv)])
 
@@ -176,6 +197,16 @@ def main(args: Args):
         sim_nodes, x0, u0, act_matrix
     )
 
+    if args.augmented:
+        xs_init_augmented = []
+        for i, x_init in enumerate(xs_init):
+            if i == 0 and i == 1:
+                x_init = np.concatenate([x_init, us_init[i], np.zeros(nu)])
+            else:
+                x_init = np.concatenate([x_init, us_init[i-1], us_init[i-1]-us_init[i-2]])
+            xs_init_augmented.append(x_init)
+        xs_init = xs_init_augmented
+       
     if False:
         sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
         x = torch.tensor(x0)
@@ -196,7 +227,11 @@ def main(args: Args):
     # xs_init = [x0] * (nsteps + 1)
 
     x_tar = 1*x0
-    x_tar[0] += 0.2  # go down
+    x_tar[0] += 0.3  # go up
+
+    if args.augmented:
+        x_tar = np.concatenate([x_tar, np.zeros(nu), np.zeros(nu)])
+
     add_objective_vis_models(np.array([0.0, 0.0, x_tar[0]]))
 
     u_max = rmodel.effortLimit[1:]*1e-2
@@ -204,14 +239,17 @@ def main(args: Args):
 
     times = np.linspace(0, Tf, nsteps + 1)
 
-    print(f"RUN: {run_name} + target: {x_tar}")
+    print(f"RUN: {run_name} + target: {x_tar} + init: {q0}")
 
     def get_task():
         weights = np.zeros(space.ndx)
         weights[0:1] = 1.0
         # weights[1:nv] = 1e-3
-        weights[nv+1:] = 5e-3
-        print(f"weight: {weights}")
+        weights[nv+1:2*nv] = 5e-3
+        weights[nv+1:2*nv] = 1e-3
+        if args.augmented:
+            weights[2*nv+nu:] = 1e-3
+        # print(f"weight: {weights}")
         return weights, x_tar
 
     def setup():
@@ -227,7 +265,10 @@ def main(args: Args):
 
             weights, x_tar = get_task()
             weights = np.zeros(space.ndx)
-            weights[nv+1:] = 5e-3
+            weights[nv+1:2*nv] = 5e-3
+
+            if args.augmented:
+                weights[2*nv+nu:] = 1e-4
 
             xreg_cost = proxddp.QuadraticStateCost(
                 space, nu, x_tar, np.diag(weights) * dt
@@ -247,7 +288,7 @@ def main(args: Args):
         if not args.term_cstr:
             weights *= 10.0
         term_cost = proxddp.QuadraticStateCost(space, nu, x_tar, np.diag(weights))
-        prob = proxddp.TrajOptProblem(x0, stages, term_cost=term_cost)
+        prob = proxddp.TrajOptProblem(xs_init[0], stages, term_cost=term_cost)
         if args.term_cstr:
             term_cstr = proxddp.StageConstraint(
                 proxddp.StateErrorResidual(space, nu, x_tar),
@@ -394,6 +435,7 @@ def main(args: Args):
         input("[enter to play]")
         while True:
             vizer.play(qs_opt, dt*3)
+            vizer.display(qs_opt[0])
             a = input("press to continue, [q] to quit")
             if a == "q":
                 break

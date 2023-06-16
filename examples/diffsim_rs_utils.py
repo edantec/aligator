@@ -127,7 +127,7 @@ def create_solo_model():
     return rmodel, rgeomModel, robot.visual_model, rdata, rgeom_data, ddl
 
 
-class DiffSimDyamicsModel(ExplicitDynamicsModel):
+class DiffSimDynamicsModel(ExplicitDynamicsModel):
 
     def __init__(self, space, model, actuation, geom_model, coeff_friction, coeff_rest, nu: int, dt: float) -> None:
         super().__init__(space, nu)
@@ -149,14 +149,14 @@ class DiffSimDyamicsModel(ExplicitDynamicsModel):
             u_noisy = data.u_tens_+ data.u_noise[i]
             data.xnext_tens_ += self.sim.makeStep(data.x_tens_, act_tens @ u_noisy, calcPinDiff=True)
         data.xnext_tens_ /= data.N_samples
-        data.xnext[:] = data.xnext_tens_.detach().numpy()
+        data.xnext[:2*self.sim.rmodel.nv] = data.xnext_tens_.detach().numpy()
         return
     
     def dForward(self, x_, u_, data):
-        for i in range(self.space.ndx):
+        for i in range(2*self.sim.rmodel.nv):
             grads = torch.autograd.grad(data.xnext_tens_[i], [data.x_tens_,data.u_tens_],retain_graph=True)
-            data.Jx[i,:]  = grads[0].detach().numpy()
-            data.Ju[i,:] = grads[1].detach().numpy()
+            data.Jx[i,:2*self.sim.rmodel.nv]  = grads[0].detach().numpy()
+            data.Ju[i,:2*self.sim.rmodel.nv] = grads[1].detach().numpy()
         return
     
     def createData(self) -> ExplicitDynamicsData:
@@ -170,6 +170,20 @@ class DiffSimDyamicsModel(ExplicitDynamicsModel):
         # data.x_tens_ = torch.zeros(shape_xnext)
         # data.xnext_tens_ = torch.zeros(shape_xnext)
         return data
+    
+class DiffSimDynamicsModelAugmented(DiffSimDynamicsModel):
+    def forward(self, x, u, data):
+        super().forward(x[:(2*self.sim.rmodel.nv)], u, data)
+        data.xnext[(2*self.sim.rmodel.nv):(2*self.sim.rmodel.nv+self.nu)] = u
+        data.xnext[(2*self.sim.rmodel.nv+self.nu):] =  u - x[(2*self.sim.rmodel.nv):(2*self.sim.rmodel.nv+self.nu)]
+        return
+
+    def dForward(self, x_, u_, data):
+        super().dForward(x_[:2*self.sim.rmodel.nv], u_, data)
+        data.Jx[(2*self.sim.rmodel.nv+self.nu):,(2*self.sim.rmodel.nv):(2*self.sim.rmodel.nv+self.nu)] = -np.eye(self.nu)
+        data.Ju[(2*self.sim.rmodel.nv):(2*self.sim.rmodel.nv+self.nu)] = np.eye(self.nu)
+        data.Ju[(2*self.sim.rmodel.nv+self.nu):] = np.eye(self.nu)
+        return
     
 class RSCallback(proxddp.BaseCallback):
     def __init__(self, N_samples : int = 1, noise_intensity : float = 0.):

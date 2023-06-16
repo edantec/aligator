@@ -14,7 +14,7 @@ import meshcat
 from proxddp import manifolds
 from proxnlp import constraints
 
-from diffsim_rs_utils import create_quadrotor_model, DiffSimDyamicsModel, RSCallback
+from diffsim_rs_utils import create_quadrotor_model, DiffSimDynamicsModel, RSCallback
 
 from utils import ArgsBase
 import torch
@@ -95,7 +95,7 @@ def main(args: Args):
     nsteps = int(Tf / dt)
     print("nsteps: {:d}".format(nsteps))
 
-    dynmodel = DiffSimDyamicsModel(space, rmodel, QUAD_ACT_MATRIX, rgeom_model, coeff_friction, coeff_rest,nu, dt)
+    dynmodel = DiffSimDynamicsModel(space, rmodel, QUAD_ACT_MATRIX, rgeom_model, coeff_friction, coeff_rest,nu, dt)
 
     q0 = 1*rmodel.qref
     q0[2] = 1.87707555e-01 
