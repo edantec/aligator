@@ -26,6 +26,7 @@ from robot_properties_teststand.config import TeststandConfig
 
 np.random.seed(1234)
 torch.manual_seed(1234)
+torch.set_default_dtype(torch.float64)
 
 teststand_config = TeststandConfig()
 rmodel, rgeom_model, rvisual_model = TeststandConfig.create_solo_leg_model()
