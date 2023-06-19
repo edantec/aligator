@@ -24,6 +24,9 @@ from diffsim.simulator import Simulator, SimulatorNode
 
 from robot_properties_teststand.config import TeststandConfig
 
+np.random.seed(1234)
+torch.manual_seed(1234)
+
 teststand_config = TeststandConfig()
 rmodel, rgeom_model, rvisual_model = TeststandConfig.create_solo_leg_model()
 
@@ -64,6 +67,7 @@ class Args(ArgsBase):
     term_cstr: bool = False
     proxddp: bool = False
     augmented: bool = False
+    rsddp: bool = False
 
     def process_args(self):
         if self.record:
@@ -93,8 +97,8 @@ def main(args: Args):
 
     act_matrix = np.eye(nv, nu, -1)
 
-    N_samples_init = 1
-    noise_intensity_init = 0.
+    N_samples_init = 1 if not args.rsddp else 4
+    noise_intensity_init = 0. if not args.rsddp else 0.00005
     max_rsddp_iter = 1
     max_iters = 200
 
