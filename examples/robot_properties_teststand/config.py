@@ -8,12 +8,24 @@
 """
 
 import numpy as np
+import pinocchio as pin
+
+from os import path
 from math import pi
-import pinocchio
 from pinocchio.utils import zero
 from pinocchio.robot_wrapper import RobotWrapper
-from utils import find_paths
+from diffsim.shapes import Plane, Ellipsoid
+from diffsim.collision_pairs import CollisionPairPlaneEllipsoid
 
+def find_paths(robot_name):
+    package_dir = path.dirname(path.abspath(__file__))
+    # resources_dir = path.join(package_dir, "src")
+    urdf_path = path.join(package_dir, "pre_generated_urdf" ,f"{robot_name}.urdf")
+
+    paths = {"package":str(package_dir),
+             "urdf":str(urdf_path)}
+
+    return paths
 
 class TeststandConfig:
     # name that is used by every other entities.
@@ -28,9 +40,7 @@ class TeststandConfig:
     # Here we use the same urdf as for the quadruped but without the freeflyer.
     paths = find_paths(robot_name)
     meshes_path = paths["package"]
-    dgm_yaml_path = paths["dgm_yaml"]
     urdf_path = paths["urdf"]
-    urdf_path_no_prismatic = paths["urdf_no_prismatic"]
 
     # The inertia of a single blmc_motor
     motor_inertia = 0.0000045
@@ -42,7 +52,7 @@ class TeststandConfig:
     motor_torque_constant = 0.025
 
     # pinocchio model
-    robot_model = pinocchio.buildModelFromUrdf(urdf_path)
+    robot_model = pin.buildModelFromUrdf(urdf_path)
     robot_model.rotorInertia[1:] = motor_inertia
     robot_model.rotorGearRatio[1:] = motor_gear_ration
 
@@ -80,7 +90,8 @@ class TeststandConfig:
     max_qref = pi
 
     # Define the initial state.
-    initial_configuration = [0.4, 0.8, -1.6]
+    # initial_configuration = [0.4, 0.8, -1.6]
+    initial_configuration = [0.235, 0.8, -1.6]
     initial_velocity = 3*[0.0, ]
 
     q0 = zero(robot_model.nq)
@@ -96,3 +107,49 @@ class TeststandConfig:
         robot.model.rotorInertia[1:] = cls.motor_inertia
         robot.model.rotorGearRatio[1:] = cls.motor_gear_ration
         return robot
+    
+    @classmethod
+    def create_solo_leg_model(cls):
+        robot = cls.buildRobotWrapper()
+        rmodel = robot.model.copy()
+
+        rmodel.qref  = np.array([0.235, 0.8, -1.6])
+        rmodel.qinit = np.array([0.235, 0.8, -1.6])
+        # Geometry model
+        geom_model = robot.collision_model
+        # add feet
+        a = 0.02
+        r = np.array([a, a, a])
+
+        geom_model.computeColPairDist = []
+
+        n = np.array([0., 0., 1])
+        p = np.array([0., 0., 0.0])
+        h = np.array([100., 100., 0.01])
+        plane_shape = Plane(0, 'plane', n, p, h)
+        T = pin.SE3(plane_shape.R, plane_shape.t)
+        plane = pin.GeometryObject("plane", 0, 0, plane_shape, T)
+        plane.meshColor = np.array([0.5, 0.5, 0.5, 1.]) 
+        planeId = geom_model.addGeometryObject(plane)
+        
+        frames_names = ["contact"]
+            
+        geom_model.collision_pairs = []
+        for name in frames_names:
+            frame_id = rmodel.getFrameId(name)
+            frame = rmodel.frames[frame_id]
+            joint_id = frame.parent
+            frame_placement = frame.placement
+            
+            shape_name = name + "_shape"
+            shape = Ellipsoid(joint_id, shape_name , r, frame_placement)
+            geometry = pin.GeometryObject(shape_name, joint_id, shape, frame_placement)
+            geometry.meshColor = np.array([1.0, 0.2, 0.2, 1.])
+            
+            geom_id = geom_model.addGeometryObject(geometry)
+            
+            foot_plane = CollisionPairPlaneEllipsoid(planeId, geom_id)
+            geom_model.collision_pairs += [foot_plane]
+            geom_model.computeColPairDist.append(False)
+
+        return rmodel, geom_model, robot.visual_model
