@@ -197,3 +197,41 @@ class RSCallback(proxddp.BaseCallback):
                 cdj.resample_noise = True
                 cdj.N_samples = self.N_samples
                 cdj.noise_intensity = self.noise_intensity
+
+
+def constraint_quasistatic_torque(nodes, x0, u0, S):
+    nv = nodes[0].rmodel.nv
+    B = torch.zeros((nv, nv))  # B is the actuation matrix when u is control including z_joint
+    B[1:, 1:] = torch.eye(nv - 1)
+    def compute_static_torque(node, x, u, S):
+        x_next = node.makeStep(torch.tensor(x), torch.tensor(S @ u), calcPinDiff=True)
+        model = node.rmodel
+        data = model.createData()
+        q = node.rdata.q
+
+        u_static = pin.rnea(model, data, q, np.zeros(model.nv), np.zeros(model.nv))
+        Jn = node.rdata.Jn_
+        Jt = node.rdata.Jt_
+        A = (torch.vstack((B, Jn, Jt)).T).detach().numpy()
+        tau_lamN_lamT = np.linalg.pinv(A) @ u_static
+
+        tau_static = tau_lamN_lamT[:model.nv]
+        tau_static_ = torch.tensor(tau_static)
+        # lamN_static = tau_lamN_lamT[model.nv:model.nv+4]
+        # lamT_static = tau_lamN_lamT[model.nv+4:]
+
+        # print(f"tau_static: {tau_static}")
+        # print(f"lamN_static: {lamN_static}")
+        # print(f"lamT_static: {lamT_static}")
+        return tau_static_[1:].detach().numpy(), x_next.detach().numpy()
+
+    u_list, x_list = [], [x0]
+    first_node = nodes[0]
+    u, _ = compute_static_torque(first_node, x0, u0, S)
+
+    x = 1*x0
+    for node in nodes:
+        u, x = compute_static_torque(node, x, u, S)
+        u_list.append(1*u)
+        x_list.append(1*x)
+    return u_list, x_list
