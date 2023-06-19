@@ -96,12 +96,12 @@ def main(args: Args):
     N_samples_init = 1
     noise_intensity_init = 0.
     max_rsddp_iter = 1
-    max_iters = 100
+    max_iters = 200
 
     coeff_friction = 0.7
     coeff_rest = 0.0
     dt = 5e-3
-    Tf = 0.1
+    Tf = 0.2
     nsteps = int(Tf / dt)
     print("nsteps: {:d}".format(nsteps))
 
@@ -182,7 +182,7 @@ def main(args: Args):
     def get_task(task: str):
         weights = np.zeros(space.ndx)
         if task == "running":
-            weights[nv+1:2*nv] = 1e-3  # only penalize velocity of joints (not z position/velocity)
+            weights[nv+1:2*nv] = 1e-4  # only penalize velocity of joints (not z position/velocity)
 
         elif task == "terminal":
             weights[0:1] = 1.0  # only penalize z position, not velocity
