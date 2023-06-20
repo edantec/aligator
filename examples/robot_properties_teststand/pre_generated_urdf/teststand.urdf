@@ -20,8 +20,8 @@
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0.05"/>
-      <geometry>~/workspace/proxddp/examples/robot_properties_teststand
-        <mesh filename="~/workspace/proxddp/examples/robot_properties_teststand/meshes/cube.obj" scale="0.2 0.1 0.1"/>
+      <geometry>/home/qlelidec/Documents/willow/proxddp/examples/robot_properties_teststand
+        <mesh filename="/home/qlelidec/Documents/willow/proxddp/examples/robot_properties_teststand/meshes/cube.obj" scale="0.2 0.1 0.1"/>
       </geometry>
       <material name="white">
         <color rgba="1 1 1 1"/>
@@ -58,7 +58,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="~/workspace/proxddp/examples/robot_properties_teststand/meshes/stl/with_foot/solo_upper_leg_left_side.stl"/>
+        <mesh filename="/home/qlelidec/Documents/willow/proxddp/examples/robot_properties_teststand/meshes/stl/with_foot/solo_upper_leg_left_side.stl"/>
       </geometry>
       <material name="grey">
         <color rgba="0.8 0.8 0.8 1.0"/>
@@ -68,7 +68,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="~/workspace/proxddp/examples/robot_properties_teststand/meshes/stl/with_foot/solo_upper_leg_left_side.stl"/>
+        <mesh filename="/home/qlelidec/Documents/willow/proxddp/examples/robot_properties_teststand/meshes/stl/with_foot/solo_upper_leg_left_side.stl"/>
       </geometry>
       <material name="grey">
         <color rgba="0.8 0.8 0.8 1.0"/>
@@ -105,7 +105,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="~/workspace/proxddp/examples/robot_properties_teststand/meshes/stl/with_foot/solo_lower_leg_left_side.stl"/>
+        <mesh filename="/home/qlelidec/Documents/willow/proxddp/examples/robot_properties_teststand/meshes/stl/with_foot/solo_lower_leg_left_side.stl"/>
       </geometry>
       <material name="grey">
         <color rgba="0.8 0.8 0.8 1.0"/>
@@ -115,7 +115,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="~/workspace/proxddp/examples/robot_properties_teststand/meshes/stl/with_foot/solo_lower_leg_left_side.stl"/>
+        <mesh filename="/home/qlelidec/Documents/willow/proxddp/examples/robot_properties_teststand/meshes/stl/with_foot/solo_lower_leg_left_side.stl"/>
       </geometry>
       <material name="grey">
         <color rgba="0.8 0.8 0.8 1.0"/>
@@ -151,7 +151,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="~/workspace/proxddp/examples/robot_properties_teststand/meshes/stl/with_foot/solo_foot.stl"/>
+        <mesh filename="/home/qlelidec/Documents/willow/proxddp/examples/robot_properties_teststand/meshes/stl/with_foot/solo_foot.stl"/>
       </geometry>
       <material name="grey">
         <color rgba="0.8 0.8 0.8 1.0"/>
@@ -161,7 +161,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="~/workspace/proxddp/examples/robot_properties_teststand/meshes/stl/with_foot/solo_foot.stl"/>
+        <mesh filename="/home/qlelidec/Documents/willow/proxddp/examples/robot_properties_teststand/meshes/stl/with_foot/solo_foot.stl"/>
       </geometry>
       <material name="grey">
         <color rgba="0.8 0.8 0.8 1.0"/>

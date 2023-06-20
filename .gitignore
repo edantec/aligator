@@ -6,5 +6,5 @@ build*/
 *.log
 .cache/
 .clang-format
-
+examples/robot_properties_teststand/pre_generated_urdf/teststand.urdf
 *.mp4
