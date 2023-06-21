@@ -19,7 +19,7 @@ from proxddp import manifolds
 from utils import ArgsBase
 
 from diffsim.utils_render import init_viewer_ellipsoids
-from diffsim_rs_utils import DiffSimDynamicsModel, RSCallback, DiffSimDynamicsModelAugmented, constraint_quasistatic_torque
+from diffsim_rs_utils import DiffSimDynamicsModel, RSCallback, DiffSimDynamicsModelAugmented, constraint_quasistatic_torque_diffsim, DiffSimDynamicsModelParallel, constraint_quasistatic_torque_contact_bench
 from diffsim.simulator import Simulator, SimulatorNode
 
 from robot_properties_teststand.config import TeststandConfig
@@ -29,7 +29,7 @@ torch.manual_seed(1234)
 torch.set_default_dtype(torch.float64)
 
 teststand_config = TeststandConfig()
-rmodel, rgeom_model, rvisual_model = TeststandConfig.create_solo_leg_model()
+rmodel, (rgeom_model, rgeom_model_cb), rvisual_model = TeststandConfig.create_solo_leg_model()
 
 nq = rmodel.nq
 nv = rmodel.nv
@@ -143,8 +143,12 @@ def main(args: Args):
 
     # compute initial guess for control to keep system in static equilibrium
     sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
-    us_init, xs_init = constraint_quasistatic_torque(
-        sim_nodes, x0, u0, act_matrix
+    # us_init, xs_init = constraint_quasistatic_torque_diffsim(
+    #     sim_nodes, x0, act_matrix
+    # )
+
+    us_init, xs_init = constraint_quasistatic_torque_contact_bench(
+        rmodel, rgeom_model_cb, x0, act_matrix, len(sim_nodes), dt, dynmodel.sim.sim.k_baumgarte
     )
 
     if args.augmented:
