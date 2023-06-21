@@ -3,6 +3,7 @@ import example_robot_data as erd
 import numpy as np
 import torch
 import proxddp
+import matplotlib.pyplot as plt
 
 from diffsim.simulator import Simulator, SimulatorNode
 from diffsim.shapes import Plane, Ellipsoid
@@ -10,6 +11,87 @@ from diffsim.collision_pairs import CollisionPairPlaneEllipsoid
 
 from proxddp.dynamics import ExplicitDynamicsModel, ExplicitDynamicsData
 
+from pycontact.simulators import NCPPGSSimulator, CCPADMMSimulator, NCPStagProjSimulator
+
+def constraint_quasistatic_torque_contact_bench(model, geom_model, x0, S, T, dt, K):
+    # simulator = NCPPGSSimulator()
+    # simulator = CCPADMMSimulator()
+    simulator = NCPStagProjSimulator()
+    nv = model.nv
+    nq = model.nq
+    B = np.zeros((nv, nv))  # B is the actuation matrix when u is control including z_joint
+    B[1:, 1:] = np.eye(S.shape[1])
+    def compute_static_torque(x, S, dt, K):
+        u = np.zeros(S.shape[1])
+        data = model.createData()
+        geom_data = geom_model.createData()
+
+        q  = x[:model.nq]
+        v = x[model.nq:]
+        fext = [pin.Force(np.zeros(6)) for i in range(model.njoints)]
+        simulator.step(
+            model, data, geom_model, geom_data, q, v, S @ u, fext, dt, K, 1
+        )
+        J = simulator.J
+        # n_contact_points = J.shape[0]//3
+        u_static = pin.rnea(model, data, q, np.zeros(model.nv), np.zeros(model.nv))
+        A = (np.vstack((B, J))).T
+        tau_lamN_lamT = np.linalg.lstsq(A, u_static)[0]
+
+        tau_static = tau_lamN_lamT[:model.nv]
+        # lamT_static = tau_lamN_lamT[model.nv:model.nv+2]
+        # lamN_static = tau_lamN_lamT[model.nv+2:]
+        # print(f"q: {q}")
+        # print(f"tau_static: {tau_static}")
+        # print(f"lamN_static: {lamN_static}")
+        # print(f"lamT_static: {lamT_static}")
+        return tau_static[1:]
+    
+    def apply_static_torque(x, u, S, dt, K):
+        data = model.createData()
+        geom_data = geom_model.createData()
+
+        q  = x[:model.nq]
+        v = x[model.nq:]
+        fext = [pin.Force(np.zeros(6)) for i in range(model.njoints)]
+        q_next, v_next = simulator.step(
+            model, data, geom_model, geom_data, q, v, S @ u, fext, dt, K, int(1e6)
+        )
+        # print(f"stopping: {simulator.solver.stop_}")
+        
+        q = q_next.copy()
+        v = v_next.copy()
+        x_next = np.concatenate([q,v])
+        return x_next
+
+    q0 = pin.integrate(model, model.qref, x0[:nv])
+    x = np.concatenate([q0, x0[nv:2*nv]])
+    u_list, x_list, v_list = [], [x], []
+    for i in range(T):
+        u = compute_static_torque(x, S, dt, K)
+        u_list.append(1*u)
+        x = apply_static_torque(x, u, S, dt, K)
+        x_list.append(1*x)
+        v_list.append(x[nq:nv+nq])
+        print(f"[{i}] u: {u}, x: {x}")
+
+
+    if 0:
+        from pinocchio.visualize import MeshcatVisualizer
+        from time import sleep
+        vizer = MeshcatVisualizer(model, geom_model, geom_model)
+        vizer.initViewer(loadModel=True, open=True)
+        vizer.display(x_list[0][:nq])
+        sleep(1)
+        for q in x_list:
+            vizer.display(q[:nq])
+            print(f"q: {q[:nq]}")
+            sleep(0.1)
+    if 0:
+        plt.plot(v_list)
+        plt.legend(["v1", "v2", "v3"])
+        plt.show()
+    return u_list, x_list
 
 def create_quadrotor_model():
     # robot model
