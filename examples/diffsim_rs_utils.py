@@ -91,6 +91,9 @@ def constraint_quasistatic_torque_contact_bench(model, geom_model, x0, S, T, dt,
         plt.plot(v_list)
         plt.legend(["v1", "v2", "v3"])
         plt.show()
+
+    # need to convert x = [q,v] again back to x = [dq, v]
+    x_list = [np.concatenate((pin.difference(model, model.qref, x[:nq]), x[nq:2*nv])) for x in x_list]
     return u_list, x_list
 
 def create_quadrotor_model():
