@@ -565,10 +565,7 @@ def constraint_quasistatic_torque_diffsim(nodes, x0, St, version = "lstsq"):
         ddq_list.append(ddq)
 
     model = nodes[0].rmodel
-<<<<<<< HEAD
-=======
     # exit()
->>>>>>> 4e8af3b407540bb8ea96f057b1b68e9570a82504
     if 0:
         from pinocchio.visualize import MeshcatVisualizer
         from time import sleep
