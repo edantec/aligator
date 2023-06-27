@@ -20,7 +20,7 @@ from utils import ArgsBase
 
 from diffsim.utils_render import init_viewer_ellipsoids
 from diffsim_rs_utils import DiffSimDynamicsModel, RSCallback, DiffSimDynamicsModelAugmented, constraint_quasistatic_torque_diffsim, constraint_quasistatic_torque_contact_bench
-from diffsim.simulator import Simulator, SimulatorNode
+from diffsim.simulator import Simulator, SimulatorNode, ContactBenchSimulatorNode
 
 from robot_properties_teststand.config import TeststandConfig
 
@@ -143,7 +143,8 @@ def main(args: Args):
         
 
     # compute initial guess for control to keep system in static equilibrium
-    sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
+    sim_nodes = [ContactBenchSimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
+    # sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
     if args.initial_guess == "diffsim_qp":
         us_init, xs_init = constraint_quasistatic_torque_diffsim(
             sim_nodes, x0, act_matrix, version="qp"
