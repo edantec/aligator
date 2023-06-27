@@ -4,6 +4,8 @@ import numpy as np
 import torch
 import proxddp
 import matplotlib.pyplot as plt
+import proxsuite
+import math
 
 from diffsim.simulator import Simulator, SimulatorNode
 from diffsim.shapes import Plane, Ellipsoid
@@ -11,41 +13,140 @@ from diffsim.collision_pairs import CollisionPairPlaneEllipsoid
 
 from proxddp.dynamics import ExplicitDynamicsModel, ExplicitDynamicsData
 
-from pycontact.simulators import NCPPGSSimulator, CCPADMMSimulator, NCPStagProjSimulator
+from pycontact.simulators import NCPPGSSimulator, CCPADMMSimulator, NCPStagProjSimulator, LCPQPSimulator
 
-def constraint_quasistatic_torque_contact_bench(model, geom_model, x0, S, T, dt, K):
+def constraint_quasistatic_torque_contact_bench(model, geom_model, x0, St, T, dt, K, version = "lstsq"):
     # simulator = NCPPGSSimulator()
     # simulator = CCPADMMSimulator()
-    simulator = NCPStagProjSimulator()
+    # simulator = NCPStagProjSimulator()
+    simulator = LCPQPSimulator()
+
     nv = model.nv
     nq = model.nq
+    nu = St.shape[1]
+    
     B = np.zeros((nv, nv))  # B is the actuation matrix when u is control including z_joint
-    B[1:, 1:] = np.eye(S.shape[1])
-    def compute_static_torque(x, S, dt, K):
-        u = np.zeros(S.shape[1])
+    B[1:, 1:] = np.eye(nu)
+    
+    def compute_static_torque(x, St, dt, K, e_prev):
+        u = np.zeros(nu)
         data = model.createData()
         geom_data = geom_model.createData()
 
-        q  = x[:model.nq]
+        q = x[:model.nq]
         v = x[model.nq:]
         fext = [pin.Force(np.zeros(6)) for i in range(model.njoints)]
         simulator.step(
-            model, data, geom_model, geom_data, q, v, S @ u, fext, dt, K, 1
+            model, data, geom_model, geom_data, q, v, St @ u, fext, dt, K, 1, th=1e-10
         )
         J = simulator.J
-        # n_contact_points = J.shape[0]//3
-        u_static = pin.rnea(model, data, q, np.zeros(model.nv), np.zeros(model.nv))
-        A = (np.vstack((B, J))).T
-        tau_lamN_lamT = np.linalg.lstsq(A, u_static)[0]
+        n_contact_points = len(simulator.contact_points)
+        assert n_contact_points == 1
 
-        tau_static = tau_lamN_lamT[:model.nv]
-        # lamT_static = tau_lamN_lamT[model.nv:model.nv+2]
-        # lamN_static = tau_lamN_lamT[model.nv+2:]
-        # print(f"q: {q}")
-        # print(f"tau_static: {tau_static}")
-        # print(f"lamN_static: {lamN_static}")
-        # print(f"lamT_static: {lamT_static}")
-        return tau_static[1:]
+        if version == "lstsq":
+            u_static = pin.rnea(model, data, q, np.zeros(model.nv), np.zeros(model.nv))
+            A = (np.vstack((B, J))).T
+            tau_lamT_lamN = np.linalg.lstsq(A, u_static)[0]
+
+            ddq = np.zeros(nv)
+            tau_static = tau_lamT_lamN[1:model.nv]
+            # lamT_static = tau_lamT_lamN[model.nv:model.nv+2]
+            # lamN_static = tau_lamT_lamN[model.nv+2:]
+            # print(f"q: {q}")
+            # print(f"tau_static: {tau_static}")
+            # print(f"lamN_static: {lamN_static}")
+            # print(f"lamT_static: {lamT_static}")
+
+        elif version == "qp":
+            Rc = simulator.R
+            Tc = simulator.contact_points[0]
+            Kp = 1.*1e-1
+            Kd = 1.*2*math.sqrt(Kp)
+            e = 1*simulator.e  # if you are not on hppfcl this here is -e
+            if e_prev is None:
+                de = np.zeros(3)
+            else:
+                de = (e - e_prev) / dt
+            # print(f"[LOCAL] e: {e}")
+            # print(f"[LOCAL] de: {de}")
+
+            oMc = pin.SE3(Rc, Tc)
+            pin.framesForwardKinematics(model, data, q)
+            oMe = data.oMf[-1]
+            pMe = model.frames[-1].placement
+            eMc = oMe.actInv(oMc)
+            updated_pMe = pMe.act(eMc)
+
+            # print(f"oMe: {oMe}")
+            # print(f"oMc: {oMc}")
+            # print(f"eMc: {eMc}")
+            # print(f"pMe: {pMe}")
+            # print(f"up_pMe: {updated_pMe}")
+            # check_oMe = data.oMi[-1].act(updated_pMe)
+            # print(f"check_oMe: {check_oMe}")
+
+            model.frames[-1].placement = updated_pMe
+            pin.crba(model, data, q)
+            M = data.M
+            c_plus_g = pin.rnea(model, data, q, v, np.zeros(model.nv))
+            pin.forwardKinematics(model, data, q, v, np.zeros(model.nv))  # this will update the contact frame acceleration drift with 0 acceleration
+            contact_acc = pin.getFrameClassicalAcceleration(model, data, model.getFrameId("contact"), pin.ReferenceFrame.LOCAL)
+            # print(f"[LOCAL]\t\t\t contact_acc: {contact_acc.linear}")
+            contact_acc_print = pin.getFrameClassicalAcceleration(model, data, model.getFrameId("contact"), pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)
+            # print(f"[LOCAL_WORLD_ALIGNED]\t contact_acc: {contact_acc_print.linear}")
+
+
+            # construct the QP problem
+            # min_{ddq, tau, lam} 0.5 || ddq ||^2_2
+            # s.t. M*ddq + C + G = S^T @ tau + J^T @ lam
+            #      J*ddq + acc_drift = acc_desired
+            # x is of size 2*nv + nu
+
+            H = np.zeros((2*nv + nu, 2*nv + nu))
+            H[:nv, :nv] = np.eye(nv)
+            g = None
+
+            A_cstr1 = np.hstack((M, -St, -J.T))
+            b_cstr1 = - c_plus_g 
+            
+            A_cstr2 = np.hstack((J, np.zeros((nv, nv+nu))))
+            b_cstr2 = contact_acc.linear - Kp * e - Kd * de
+
+            A_cstr = np.vstack((A_cstr1, A_cstr2))
+            b_cstr = np.hstack((b_cstr1, b_cstr2))
+            C = None
+            l = None
+            u = None
+
+            n = 2*nv + nu
+            n_eq = A_cstr.shape[0]
+            n_in = 0
+
+            qp = proxsuite.proxqp.dense.QP(n, n_eq, n_in)
+            qp.init(H, g, A_cstr, b_cstr, C, l, u)
+            qp.settings.eps_abs = 1e-9
+            qp.settings.max_iter = 10_000
+            qp.solve()
+            # print(f"status: {qp.results.info.status}, dual: {qp.results.info.dua_res}, primal: {qp.results.info.pri_res}")
+
+            ddq = qp.results.x[:nv]
+            tau_static = qp.results.x[nv:nv+nu]
+            lam = qp.results.x[nv+nu:]
+
+            lhs_qp_cstr1 = M @ ddq + c_plus_g
+            rhs_qp_cstr1 = St @ tau_static + J.T @ lam
+
+            lhs_qp_cstr2 = J @ ddq - contact_acc.linear
+            rhs_qp_cstr2 = - Kp * e - Kd * de
+
+            # print(f"[QP] constraint violation 1: {lhs_qp_cstr1 - rhs_qp_cstr1}")
+            # print(f"[QP] constraint violation 2: {lhs_qp_cstr2 - rhs_qp_cstr2}")
+
+            # print(f"[QP] ddq: {ddq}")
+            # print(f"[QP] tau: {tau_static}")
+            # print(f"[QP] lam: {lam}")
+
+        return tau_static, e, contact_acc_print.linear, ddq
     
     def apply_static_torque(x, u, S, dt, K):
         data = model.createData()
@@ -53,28 +154,32 @@ def constraint_quasistatic_torque_contact_bench(model, geom_model, x0, S, T, dt,
 
         q  = x[:model.nq]
         v = x[model.nq:]
+        # print(f"q: {q}, v: {v}, u: {u}")
         fext = [pin.Force(np.zeros(6)) for i in range(model.njoints)]
         q_next, v_next = simulator.step(
-            model, data, geom_model, geom_data, q, v, S @ u, fext, dt, K, int(1e6)
+            model, data, geom_model, geom_data, q, v, S @ u, fext, dt, K, int(1e6), th=1e-10
         )
         # print(f"stopping: {simulator.solver.stop_}")
         
         q = q_next.copy()
         v = v_next.copy()
+        # print(f"q: {q}, v: {v}")
         x_next = np.concatenate([q,v])
         return x_next
 
     q0 = pin.integrate(model, model.qref, x0[:nv])
     x = np.concatenate([q0, x0[nv:2*nv]])
-    u_list, x_list, v_list = [], [x], []
+    u_list, x_list, v_list, acc_c_list, ddq_list = [], [x], [], [], []
+    e = None
     for i in range(T):
-        u = compute_static_torque(x, S, dt, K)
+        print(f"[{i}] ----------------------------------------")
+        u, e, acc_c, ddq = compute_static_torque(x, St, dt, K, e)
         u_list.append(1*u)
-        x = apply_static_torque(x, u, S, dt, K)
+        x = apply_static_torque(x, u, St, dt, K)
         x_list.append(1*x)
         v_list.append(x[nq:nv+nq])
-        print(f"[{i}] u: {u}, x: {x}")
-
+        acc_c_list.append(acc_c)
+        ddq_list.append(ddq)
 
     if 0:
         from pinocchio.visualize import MeshcatVisualizer
@@ -88,8 +193,18 @@ def constraint_quasistatic_torque_contact_bench(model, geom_model, x0, S, T, dt,
             print(f"q: {q[:nq]}")
             sleep(0.1)
     if 0:
+        plt.figure()
+        plt.plot([x[:3] for x in x_list])
+        plt.legend(["q1", "q2", "q3"])
+        plt.figure()
         plt.plot(v_list)
         plt.legend(["v1", "v2", "v3"])
+        plt.figure()
+        plt.plot(acc_c_list)
+        plt.legend(["acc_c1", "acc_c2", "acc_c3"])
+        plt.figure()
+        plt.plot(ddq_list)
+        plt.legend(["ddq1", "ddq2", "ddq3"])
         plt.show()
 
     # need to convert x = [q,v] again back to x = [dq, v]
@@ -283,54 +398,196 @@ class RSCallback(proxddp.BaseCallback):
                 cdj.N_samples = self.N_samples
                 cdj.noise_intensity = self.noise_intensity
 
-
-def constraint_quasistatic_torque_diffsim(nodes, x0, S):
+def constraint_quasistatic_torque_diffsim(nodes, x0, St, version = "lstsq"):
     nv = nodes[0].rmodel.nv
+    nu = St.shape[1]
+    dt = nodes[0].sim.dt
+
     B = torch.zeros((nv, nv))  # B is the actuation matrix when u is control including z_joint
     B[1:, 1:] = torch.eye(nv - 1)
-    def compute_static_torque(node, x, S):
-        u = np.zeros(S.shape[1])
+    
+    def compute_static_torque(node, x, St, e_prev):
+        u = np.zeros(St.shape[1])
 
         model = node.rmodel
         data = model.createData()
 
-        node.makeStep(torch.tensor(x), torch.tensor(S @ u), calcPinDiff=True)
-        q = node.rdata.q
+        q = pin.integrate(model, model.qref, x[:model.nv])
+        v = x[model.nv:]
 
-        u_static = pin.rnea(model, data, q, np.zeros(model.nv), np.zeros(model.nv))
-        try:
-  
-            Jn = node.rdata.Jn_
-            Jt = node.rdata.Jt_
-            A = (torch.vstack((B, Jn, Jt)).T).detach().numpy()
-            tau_lamN_lamT = np.linalg.lstsq(A, u_static)[0]
+        node.makeStep(torch.tensor(x), torch.tensor(St @ u), calcPinDiff=True)
+        e = contact_acc_print = ddq = None
+        if node.collisionChecker.ncol == 1:
+            in_collision = True
+            J = node.rdata.J_
 
-            tau_static = tau_lamN_lamT[:model.nv]
-            tau_static_ = torch.tensor(tau_static)
-            # lamN_static = tau_lamN_lamT[model.nv:model.nv+1]
-            # lamT_static = tau_lamN_lamT[model.nv+1:]
+        else:
+            in_collision = False
+
+        if version == "lstsq":
+
+            u_static = pin.rnea(model, data, q, np.zeros(model.nv), np.zeros(model.nv))
+            A = (torch.vstack((B, J)).T).detach().numpy()
+            tau_lamT_lamN = np.linalg.lstsq(A, u_static)[0]
+
+            tau_static = tau_lamT_lamN[1:model.nv]
+            # lamT_static = tau_lamT_lamN[model.nv:model.nv+1]
+            # lamN_static = tau_lamT_lamN[model.nv+1:]
             # print(f"tau_static: {tau_static}")
             # print(f"lamN_static: {lamN_static}")
             # print(f"lamT_static: {lamT_static}")
-        except:
-            tau_static_ = torch.tensor(u_static)
 
-        return tau_static_[1:].detach().numpy()
+        elif version == "qp":
+            
+            if in_collision:
+                J = J.detach().numpy()
+                # Rc = simulator.R  in diffsim oRc_: 
+                # tensor([[-1.,  0.,  0.],
+                        # [ 0.,  1.,  0.],
+                        # [ 0.,  0., -1.]])
+                # Rc = np.eye(3)
+                Rc = node.collisionChecker.oRc
+                Tc = node.collisionChecker.oTc
+                Kp = 0.*1e-1
+                Kd = 0.*2*math.sqrt(Kp)
+                if node.e is None:
+                    e = np.zeros(3)
+                else:
+                    e = np.array([0., 0., node.e.detach().numpy()[0]])
+                if e_prev is None:
+                    de = np.zeros(3)
+                else:
+                    de = (e - e_prev) / dt
+                # print(f"[LOCAL] e: {e}")
+                # print(f"[LOCAL] de: {de}")
 
-    u_list, x_list, v_list = [], [x0], []
+                oMc = pin.SE3(Rc, Tc)
+                pin.framesForwardKinematics(model, data, q)
+                oMe = data.oMf[-1]
+                pMe = model.frames[-1].placement
+                eMc = oMe.actInv(oMc)
+                updated_pMe = pMe.act(eMc)
+
+                # print(f"oMe: {oMe}")
+                # print(f"oMc: {oMc}")
+                # print(f"eMc: {eMc}")
+                # print(f"pMe: {pMe}")
+                # print(f"up_pMe: {updated_pMe}")
+                # check_oMe = data.oMi[-1].act(updated_pMe)
+                # print(f"check_oMe: {check_oMe}")
+
+                model.frames[-1].placement = updated_pMe
+                pin.forwardKinematics(model, data, q, v, np.zeros(model.nv))  # this will update the contact frame acceleration drift with 0 acceleration
+                contact_acc = pin.getFrameClassicalAcceleration(model, data, model.getFrameId("contact"), pin.ReferenceFrame.LOCAL)
+                # print(f"[LOCAL]\t\t\t contact_acc: {contact_acc.linear}")
+                contact_acc_print = pin.getFrameClassicalAcceleration(model, data, model.getFrameId("contact"), pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)
+                # print(f"[LOCAL_WORLD_ALIGNED]\t contact_acc: {contact_acc_print.linear}")
+
+            pin.crba(model, data, q)
+            M = data.M
+            c_plus_g = pin.rnea(model, data, q, v, np.zeros(model.nv))
+
+            # construct the QP problem
+            # min_{ddq, tau, lam} 0.5 || ddq ||^2_2
+            # s.t. M*ddq + C + G = S^T @ tau + J^T @ lam
+            #      J*ddq + acc_drift = acc_desired
+            # x is of size 2*nv + nu
+
+            H = np.zeros((2*nv + nu, 2*nv + nu))
+            H[:nv, :nv] = np.eye(nv)
+            g = None
+
+            b_cstr1 = - c_plus_g 
+            if in_collision:
+                A_cstr1 = np.hstack((M, -St, -J.T))
+                A_cstr2 = np.hstack((J, np.zeros((nv, nv+nu))))
+                b_cstr2 = contact_acc.linear - Kp * e - Kd * de
+                A_cstr = np.vstack((A_cstr1, A_cstr2))
+                b_cstr = np.hstack((b_cstr1, b_cstr2))
+            else:
+                A_cstr = np.hstack((M, -St, np.zeros((nv, nv))))
+                b_cstr = b_cstr1
+
+            C = None
+            l = None
+            u = None
+
+            n = 2*nv + nu
+            n_eq = A_cstr.shape[0]
+            n_in = 0
+
+            qp = proxsuite.proxqp.dense.QP(n, n_eq, n_in)
+            qp.init(H, g, A_cstr, b_cstr, C, l, u)
+            qp.settings.eps_abs = 1e-9
+            qp.settings.max_iter = 10_000
+            qp.solve()
+            # print(f"status: {qp.results.info.status}, dual: {qp.results.info.dua_res}, primal: {qp.results.info.pri_res}")
+
+            ddq = qp.results.x[:nv]
+            tau_static = qp.results.x[nv:nv+nu]
+            lam = qp.results.x[nv+nu:]
+
+            lhs_qp_cstr1 = M @ ddq + c_plus_g
+            if in_collision:
+                rhs_qp_cstr1 = St @ tau_static + J.T @ lam
+
+                lhs_qp_cstr2 = J @ ddq - contact_acc.linear
+                rhs_qp_cstr2 = - Kp * e - Kd * de
+                # print(f"[QP] constraint violation 2: {lhs_qp_cstr2 - rhs_qp_cstr2}")
+
+            else:
+                rhs_qp_cstr1 = St @ tau_static
+            # print(f"[QP] constraint violation 1: {lhs_qp_cstr1 - rhs_qp_cstr1}")
+
+            # print(f"[QP] ddq: {ddq}")
+            # print(f"[QP] tau: {tau_static}")
+            # print(f"[QP] lam: {lam}")
+
+
+        return tau_static, e, contact_acc_print, ddq
+
+    u_list, x_list, v_list, acc_c_list, ddq_list = [], [x0], [], [], []
     x = 1*x0
-
+    e = None
     for i, node in enumerate(nodes):
-        u = compute_static_torque(node, x, S)
+        print(f"[{i}] ----------------------------------------")
+        u, e, acc_c, ddq = compute_static_torque(node, x, St, e)
         u_list.append(1*u)
-        x = node.makeStep(torch.tensor(x), torch.tensor(S @ u), calcPinDiff=True).detach().numpy()
+        # print(f" q: {pin.integrate(node.rmodel, node.rmodel.qref, x[:nv])}, v: {x[nv:2*nv]}, u: {u}")
+        x = node.makeStep(torch.tensor(x), torch.tensor(St @ u), calcPinDiff=True).detach().numpy()
+        # print(f" q: {pin.integrate(node.rmodel, node.rmodel.qref, x[:nv])}, v: {x[nv:2*nv]}")
         x_list.append(1*x)
         v_list.append(x[nv:2*nv])
-        print(f"[{i}] u: {u}, x: {x}")
+        acc_c_list.append(acc_c)
+        ddq_list.append(ddq)
 
+    model = nodes[0].rmodel
+    # exit()
     if 0:
+        from pinocchio.visualize import MeshcatVisualizer
+        from time import sleep
+        vizer = MeshcatVisualizer(model, nodes[0].rgeom_model, nodes[0].rgeom_model)
+        vizer.initViewer(loadModel=True, open=True)
+        vizer.display(pin.integrate(model, model.qref, x_list[0][:nv]))
+        sleep(1)
+        for q in x_list:
+            q = pin.integrate(model, model.qref, q[:nv])
+            vizer.display(q)
+            print(f"q: {q}")
+            sleep(0.1)
+    if 0:
+        plt.figure()
+        plt.plot([x[:3] for x in x_list])
+        plt.legend(["q1", "q2", "q3"])
+        plt.figure()
         plt.plot(v_list)
         plt.legend(["v1", "v2", "v3"])
+        plt.figure()
+        # plt.plot(acc_c_list)
+        # plt.legend(["acc_c1", "acc_c2", "acc_c3"])
+        plt.figure()
+        plt.plot(ddq_list)
+        plt.legend(["ddq1", "ddq2", "ddq3"])
         plt.show()
-        print(x_list[-1])
+    
     return u_list, x_list
