@@ -419,10 +419,7 @@ def constraint_quasistatic_torque_diffsim(nodes, x0, St, version = "lstsq"):
         e = contact_acc_print = ddq = None
         if node.collisionChecker.ncol == 1:
             in_collision = True
-            Jn = node.rdata.Jn_
-            Jt = node.rdata.Jt_
-            # J = torch.vstack((Jn, Jt))
-            J = torch.vstack((Jt, Jn))
+            J = node.rdata.J_
 
         else:
             in_collision = False
