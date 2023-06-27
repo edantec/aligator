@@ -69,6 +69,7 @@ class Args(ArgsBase):
     proxddp: bool = False
     augmented: bool = False
     rsddp: bool = False
+    initial_guess: str = "diffsim_qp"
 
     def process_args(self):
         if self.record:
