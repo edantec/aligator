@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import proxsuite
 import math
 
-from diffsim.simulator import Simulator, SimulatorNode
+from diffsim.simulator import Simulator, SimulatorNode, ContactBenchSimulatorNode
 from diffsim.shapes import Plane, Ellipsoid
 from diffsim.collision_pairs import CollisionPairPlaneEllipsoid
 
@@ -359,7 +359,8 @@ class DiffSimDynamicsModel(ExplicitDynamicsModel):
         super().__init__(space, nu)
         self.act = actuation
         self.dt = dt
-        self.sim = SimulatorNode(Simulator(model, geom_model, dt, coeff_friction, coeff_rest, dt_collision=dt, eps_contact=1e-3))
+        # self.sim = SimulatorNode(Simulator(model, geom_model, dt, coeff_friction, coeff_rest, dt_collision=dt, eps_contact=1e-3))
+        self.sim = ContactBenchSimulatorNode(Simulator(model, geom_model, dt, coeff_friction, coeff_rest, dt_collision=dt, eps_contact=1e-3))
         # self.N_samples = N_samples
         # self.noise_intensity = noise_intensity
 

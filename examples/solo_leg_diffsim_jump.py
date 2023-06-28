@@ -127,7 +127,8 @@ def main(args: Args):
 
     if False:
         # Run a simple forward simulation to check behavior of the simulator
-        sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
+        # sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt), debug_collisions=False) for _ in range(nsteps)]
+        sim_nodes = [ContactBenchSimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt), debug_collisions=False) for _ in range(nsteps)]
         x = torch.tensor(x0)
         u = torch.zeros(3)
         q_list = []
@@ -178,7 +179,8 @@ def main(args: Args):
        
     if False:
         # Run a simple forward simulation to check if the initial guess is correct to keep the system in static equilibrium
-        sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
+        sim_nodes = [ContactBenchSimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
+        # sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
         x = torch.tensor(x0)
         q_list = []
         for i, node in enumerate(sim_nodes):
