@@ -38,6 +38,11 @@ run_name = "solo_foot_up"
 
 # Choose init configuration
 q_init = 1*teststand_config.q0
+q_target = 1*q_init
+q_target[0] += 0.3
+dq_target = pin.difference(rmodel, rmodel.qref, q_target)
+
+# q_init[0] += 0.0079
 
 # streched configuration
 # q_init = pin.neutral(rmodel)
@@ -120,8 +125,10 @@ def main(args: Args):
     dq0 = pin.difference(rmodel, rmodel.qref, q0)
     x0 = np.concatenate([dq0, np.zeros(nv)])
 
-    x_tar = 1*x0
-    x_tar[0] += 0.3  # go up
+    x_tar = np.concatenate([pin.difference(rmodel, rmodel.qref, q0), np.zeros(nv)])
+    x_tar[0] = dq_target[0]
+
+    print(f"x_tar: {x_tar}")
 
     u0 = np.zeros(nu)
 
@@ -198,7 +205,7 @@ def main(args: Args):
     if args.augmented:
         x_tar = np.concatenate([x_tar, np.zeros(nu), np.zeros(nu)])
 
-    add_objective_vis_models(np.array([0.0, 0.0, q_init[0] + x_tar[0]]))
+    add_objective_vis_models(np.array([0.0, 0.0, rmodel.qref[0] + x_tar[0]]))
 
     u_max = rmodel.effortLimit[1:]
     u_min = -1*u_max
