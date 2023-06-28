@@ -105,9 +105,9 @@ def main(args: Args):
     act_matrix = np.eye(nv, nu, -1)
 
     N_samples_init = 1 if not args.rsddp else 4
-    noise_intensity_init = 0. if not args.rsddp else 0.00005
-    max_rsddp_iter = 1
-    max_iters = 200
+    noise_intensity_init = 0. if not args.rsddp else 0.5
+    max_rsddp_iter = 10 if args.rsddp else 1
+    max_iters = 15
 
     coeff_friction = 0.7
     coeff_rest = 0.0
@@ -296,7 +296,7 @@ def main(args: Args):
             results = solver.getResults()
             xs_init = results.xs
             us_init = results.us
-            solver.getCallback("rs").noise_intensity /= 2.
+            solver.getCallback("rs").noise_intensity /= 5.
 
     results = solver.getResults()
     workspace = solver.getWorkspace()
@@ -407,21 +407,26 @@ def main(args: Args):
 
         input("[enter to play]")
         while True:
-            vizer.play(qs_opt, dt*3)
-            vizer.display(qs_opt[-1])
-            a = input("press to continue, [q] to quit")
-            if a == "q":
-                break
+            for dq in xs_opt:
+                q = pin.integrate(rmodel, rmodel.qref, dq[:nv])
+                vizer.display(q)
+                input()
 
-        if args.record:
-            ctx = vizer.create_video_ctx(vid_uri, fps=30)
-        else:
-            import contextlib
+            # vizer.play(qs_opt, dt*10)
+            # vizer.display(qs_opt[-1])
+            # a = input("press to continue, [q] to quit")
+            # if a == "q":
+            #     break
 
-            ctx = contextlib.nullcontext()
-        with ctx:
-            for i in range(4):
-                vizer.play(qs_opt, dt, get_callback(i))
+        # if args.record:
+        #     ctx = vizer.create_video_ctx(vid_uri, fps=30)
+        # else:
+        #     import contextlib
+
+        #     ctx = contextlib.nullcontext()
+        # with ctx:
+        #     for i in range(4):
+        #         vizer.play(qs_opt, dt, get_callback(i))
 
 
 if __name__ == "__main__":
