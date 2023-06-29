@@ -14,13 +14,13 @@ import meshcat
 from proxddp import manifolds
 from proxnlp import constraints
 
-from diffsim_rs_utils import create_quadrotor_model, DiffSimDynamicsModel, RSCallback
+from diffsim_rs_utils import create_quadrotor_model, DiffSimDynamicsModel, RSCallback, QuCallback
 
 from utils import ArgsBase
 import torch
 
-torch.manual_seed(1234)
-np.random.seed(1234)
+torch.manual_seed(123456)
+np.random.seed(123456)
 
 rmodel, rgeom_model, rvisual_model, rdata, rgeom_data, _ = create_quadrotor_model()
 nq = rmodel.nq
@@ -35,6 +35,7 @@ class Args(ArgsBase):
     display: bool = False
     term_cstr: bool = False
     proxddp: bool = False
+    rsddp : bool = False
 
     def process_args(self):
         if self.record:
@@ -187,21 +188,23 @@ def main(args: Args):
     # input()
 
 
-    N_samples_init = 4
-    noise_intensity_init = 1.
-    max_rsddp_iter = 3
+    N_samples_init = 4 if args.rsddp else 1
+    noise_intensity_init = 1. if args.rsddp else 0.
+    max_rsddp_iter = 3 if args.rsddp else 1
     tol = 1e-3
     verbose = proxddp.VerboseLevel.VERBOSE
     history_cb = proxddp.HistoryCallback()
+    qu_cb = QuCallback()
     rs_cb = RSCallback(N_samples_init, noise_intensity_init)
     solver = proxddp.SolverFDDP(tol, verbose=verbose)
     if args.proxddp:
         mu_init = 1e-1
         rho_init = 0.0
         solver = proxddp.SolverProxDDP(tol, mu_init, rho_init, verbose=verbose)
-    solver.max_iters = 6
+    solver.max_iters = 6 if args.rsddp else 20
     solver.registerCallback("his", history_cb)
     solver.registerCallback("rs", rs_cb)
+    solver.registerCallback("qu", qu_cb)
     solver.setup(problem)
     results = solver.getResults()
     workspace = solver.getWorkspace()
@@ -289,6 +292,15 @@ def main(args: Args):
         for ext in ["png", "pdf"]:
             fig.savefig("assets/{}.{}".format(TAG, ext))
         plt.show()
+        if args.rsddp:
+            TAG2 = "_rsddp"
+        else:
+            TAG2 = ""
+        np.save("assets/{}.{}".format(TAG+TAG2+"_x", "npy"),xs_opt)
+        np.save("assets/{}.{}".format(TAG+TAG2+"_u", "npy"),us_opt)
+        np.save("assets/{}.{}".format(TAG+TAG2+"_Qu", "npy"),qu_cb.Qus)
+        np.save("assets/{}.{}".format(TAG+TAG2+"_cost", "npy"),history_cb.storage.values.tolist())
+
 
     if args.display:
         cam_dist = 2.0
