@@ -38,6 +38,11 @@ run_name = "solo_foot_up"
 
 # Choose init configuration
 q_init = 1*teststand_config.q0
+q_target = 1*q_init
+q_target[0] += 0.3
+dq_target = pin.difference(rmodel, rmodel.qref, q_target)
+
+# q_init[0] += 0.0079
 
 # streched configuration
 # q_init = pin.neutral(rmodel)
@@ -100,9 +105,9 @@ def main(args: Args):
     act_matrix = np.eye(nv, nu, -1)
 
     N_samples_init = 1 if not args.rsddp else 4
-    noise_intensity_init = 0. if not args.rsddp else 0.00005
-    max_rsddp_iter = 1
-    max_iters = 200
+    noise_intensity_init = 0. if not args.rsddp else 0.5
+    max_rsddp_iter = 10 if args.rsddp else 1
+    max_iters = 15
 
     coeff_friction = 0.7
     coeff_rest = 0.0
@@ -120,14 +125,17 @@ def main(args: Args):
     dq0 = pin.difference(rmodel, rmodel.qref, q0)
     x0 = np.concatenate([dq0, np.zeros(nv)])
 
-    x_tar = 1*x0
-    x_tar[0] += 0.3  # go up
+    x_tar = np.concatenate([pin.difference(rmodel, rmodel.qref, q0), np.zeros(nv)])
+    x_tar[0] = dq_target[0]
+
+    print(f"x_tar: {x_tar}")
 
     u0 = np.zeros(nu)
 
     if False:
         # Run a simple forward simulation to check behavior of the simulator
-        sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
+        # sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt), debug_collisions=False) for _ in range(nsteps)]
+        sim_nodes = [ContactBenchSimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt), debug_collisions=False) for _ in range(nsteps)]
         x = torch.tensor(x0)
         u = torch.zeros(3)
         q_list = []
@@ -178,7 +186,8 @@ def main(args: Args):
        
     if False:
         # Run a simple forward simulation to check if the initial guess is correct to keep the system in static equilibrium
-        sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
+        sim_nodes = [ContactBenchSimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
+        # sim_nodes = [SimulatorNode(Simulator(rmodel, rgeom_model, dt, coeff_friction, coeff_rest, dt_collision=dt)) for _ in range(nsteps)]
         x = torch.tensor(x0)
         q_list = []
         for i, node in enumerate(sim_nodes):
@@ -196,7 +205,7 @@ def main(args: Args):
     if args.augmented:
         x_tar = np.concatenate([x_tar, np.zeros(nu), np.zeros(nu)])
 
-    add_objective_vis_models(np.array([0.0, 0.0, q_init[0] + x_tar[0]]))
+    add_objective_vis_models(np.array([0.0, 0.0, rmodel.qref[0] + x_tar[0]]))
 
     u_max = rmodel.effortLimit[1:]
     u_min = -1*u_max
@@ -287,7 +296,7 @@ def main(args: Args):
             results = solver.getResults()
             xs_init = results.xs
             us_init = results.us
-            solver.getCallback("rs").noise_intensity /= 2.
+            solver.getCallback("rs").noise_intensity /= 5.
 
     results = solver.getResults()
     workspace = solver.getWorkspace()
@@ -398,21 +407,26 @@ def main(args: Args):
 
         input("[enter to play]")
         while True:
-            vizer.play(qs_opt, dt*3)
-            vizer.display(qs_opt[-1])
-            a = input("press to continue, [q] to quit")
-            if a == "q":
-                break
+            for dq in xs_opt:
+                q = pin.integrate(rmodel, rmodel.qref, dq[:nv])
+                vizer.display(q)
+                input()
 
-        if args.record:
-            ctx = vizer.create_video_ctx(vid_uri, fps=30)
-        else:
-            import contextlib
+            # vizer.play(qs_opt, dt*10)
+            # vizer.display(qs_opt[-1])
+            # a = input("press to continue, [q] to quit")
+            # if a == "q":
+            #     break
 
-            ctx = contextlib.nullcontext()
-        with ctx:
-            for i in range(4):
-                vizer.play(qs_opt, dt, get_callback(i))
+        # if args.record:
+        #     ctx = vizer.create_video_ctx(vid_uri, fps=30)
+        # else:
+        #     import contextlib
+
+        #     ctx = contextlib.nullcontext()
+        # with ctx:
+        #     for i in range(4):
+        #         vizer.play(qs_opt, dt, get_callback(i))
 
 
 if __name__ == "__main__":

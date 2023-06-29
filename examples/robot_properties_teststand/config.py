@@ -180,7 +180,7 @@ class TeststandConfig:
         plane.meshColor = np.array([0.5, 0.5, 0.5, 1.]) 
         planeId = geom_model.addGeometryObject(plane)
         
-        frames_names = ["contact"]
+        frames_names = ["END"]
             
         geom_model.collision_pairs = []
         for name in frames_names:
