@@ -435,16 +435,17 @@ class RSCallback(proxddp.BaseCallback):
                 cdj.N_samples = self.N_samples
                 cdj.noise_intensity = self.noise_intensity
 
-class QuCallback(proxddp.HistoryCallback):
-    def __init__(self, store_pd_vars: bool = True, store_values: bool = True, store_residuals: bool = True) -> None:
-        super().__init__(store_pd_vars, store_values, store_residuals)
+class QuCallback(proxddp.BaseCallback):
+
+    def __init__(self):
+        super().__init__()
         self.Qus = []
 
     def call(self, workspace: proxddp.Workspace, results: proxddp.Results):
         max_qu = 0.
         for qpar in workspace.q_params:
-            if qpar.Qu > max_qu:
-                max_qu = qpar.Qu
+            if np.max(qpar.Qu) > max_qu:
+                max_qu = np.max(qpar.Qu)
         self.Qus += [max_qu]
 
 def constraint_quasistatic_torque_diffsim(nodes, x0, St, version = "lstsq"):

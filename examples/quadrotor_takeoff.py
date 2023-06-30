@@ -92,7 +92,7 @@ def main(args: Args):
     coeff_friction = 0.9
     coeff_rest = 0.0
     dt = 0.01
-    Tf = 1.5
+    Tf = .5
     nsteps = int(Tf / dt)
     print("nsteps: {:d}".format(nsteps))
 
@@ -189,7 +189,7 @@ def main(args: Args):
 
 
     N_samples_init = 4 if args.rsddp else 1
-    noise_intensity_init = 1. if args.rsddp else 0.
+    noise_intensity_init = .1 if args.rsddp else 0.
     max_rsddp_iter = 3 if args.rsddp else 1
     tol = 1e-3
     verbose = proxddp.VerboseLevel.VERBOSE
@@ -203,8 +203,8 @@ def main(args: Args):
         solver = proxddp.SolverProxDDP(tol, mu_init, rho_init, verbose=verbose)
     solver.max_iters = 6 if args.rsddp else 20
     solver.registerCallback("his", history_cb)
-    solver.registerCallback("rs", rs_cb)
     solver.registerCallback("qu", qu_cb)
+    solver.registerCallback("rs", rs_cb)
     solver.setup(problem)
     results = solver.getResults()
     workspace = solver.getWorkspace()
@@ -298,6 +298,7 @@ def main(args: Args):
             TAG2 = ""
         np.save("assets/{}.{}".format(TAG+TAG2+"_x", "npy"),xs_opt)
         np.save("assets/{}.{}".format(TAG+TAG2+"_u", "npy"),us_opt)
+        print("Qu", qu_cb.Qus)
         np.save("assets/{}.{}".format(TAG+TAG2+"_Qu", "npy"),qu_cb.Qus)
         np.save("assets/{}.{}".format(TAG+TAG2+"_cost", "npy"),history_cb.storage.values.tolist())
 
