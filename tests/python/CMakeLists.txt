@@ -18,7 +18,7 @@ endif()
 list(REMOVE_ITEM PYTHON_TESTS test_center_of_mass.py)
 list(REMOVE_ITEM PYTHON_TESTS test_constrained_dynamics.py)
 list(REMOVE_ITEM PYTHON_TESTS test_finite_diff.py)
-list(REMOVE_ITEM PYTHON_TESTS test_frames.py)
+# list(REMOVE_ITEM PYTHON_TESTS test_frames.py)
 list(REMOVE_ITEM PYTHON_TESTS test_rollout.py)
 make_directory(${CMAKE_CURRENT_BINARY_DIR})
 

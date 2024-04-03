@@ -1,0 +1,79 @@
+#pragma once
+
+#include "aligator/core/unary-function.hpp"
+#include "./fwd.hpp"
+
+#include <pinocchio/multibody/model.hpp>
+#include <pinocchio/multibody/frame.hpp>
+#include <pinocchio/algorithm/geometry.hpp>
+#include <pinocchio/algorithm/jacobian.hpp>
+#include <pinocchio/algorithm/kinematics.hpp>
+#include <pinocchio/multibody/fcl.hpp>
+
+namespace aligator {
+
+template <typename Scalar> struct FrameCollisionDataTpl;
+
+template <typename _Scalar>
+struct FrameCollisionResidualTpl : UnaryFunctionTpl<_Scalar>, frame_api {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  using Scalar = _Scalar;
+  ALIGATOR_DYNAMIC_TYPEDEFS(Scalar);
+  ALIGATOR_UNARY_FUNCTION_INTERFACE(Scalar);
+  using BaseData = typename Base::Data;
+  using Model = pinocchio::ModelTpl<Scalar>;
+  using ManifoldPtr = shared_ptr<ManifoldAbstractTpl<Scalar>>;
+  using SE3 = pinocchio::SE3Tpl<Scalar>;
+  using Data = FrameCollisionDataTpl<Scalar>;
+  using GeometryModel = pinocchio::GeometryModel;
+
+  shared_ptr<Model> pin_model_;
+  shared_ptr<GeometryModel> geom_model_;
+
+  FrameCollisionResidualTpl(const int ndx, const int nu,
+                            const shared_ptr<Model> &model,
+                            const shared_ptr<GeometryModel> &geom_model,
+                            const pinocchio::PairIndex frame_pair_id,
+                            const pinocchio::JointIndex joint_id)
+      : Base(ndx, nu, 3), pin_model_(model), geom_model_(geom_model),
+        frame_pair_id_(frame_pair_id), joint_id_(joint_id) {}
+
+  void evaluate(const ConstVectorRef &x, BaseData &data) const;
+
+  void computeJacobians(const ConstVectorRef &x, BaseData &data) const;
+
+  shared_ptr<BaseData> createData() const {
+    return allocate_shared_eigen_aligned<Data>(*this);
+  }
+
+protected:
+  pinocchio::PairIndex frame_pair_id_;
+  pinocchio::JointIndex joint_id_;
+};
+
+template <typename Scalar>
+struct FrameCollisionDataTpl : StageFunctionDataTpl<Scalar> {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  using Base = StageFunctionDataTpl<Scalar>;
+  using PinData = pinocchio::DataTpl<Scalar>;
+  using PinGeom = pinocchio::GeometryData;
+
+  /// Pinocchio data object
+  PinData pin_data_;
+  /// Pinocchio geometry object
+  PinGeom geometry_;
+  /// Jacobian of the collision point
+  typename math_types<Scalar>::Matrix6Xs Jcol_;
+  /// Vector from joint point to collision point in world frame
+  typename math_types<Scalar>::Vector3s distance_;
+
+  FrameCollisionDataTpl(const FrameCollisionResidualTpl<Scalar> &model);
+};
+
+} // namespace aligator
+
+#include "aligator/modelling/multibody/frame-collision.hxx"
+
+#ifdef ALIGATOR_ENABLE_TEMPLATE_INSTANTIATION
+#include "./frame-collision.txx"
+#endif
