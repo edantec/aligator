@@ -2,8 +2,10 @@
 #include "aligator/python/fwd.hpp"
 
 #include "aligator/modelling/dynamics/kinodynamics-fwd.hpp"
+#include "aligator/modelling/dynamics/vkinodynamics-fwd.hpp"
 #include <pinocchio/multibody/fwd.hpp>
 #include <proxsuite-nlp/modelling/spaces/multibody.hpp>
+#include <proxsuite-nlp/modelling/spaces/cartesian-product.hpp>
 #include <pinocchio/multibody/model.hpp>
 
 namespace aligator {
@@ -18,8 +20,12 @@ void exposeKinodynamics() {
   using ODEAbstract = ODEAbstractTpl<Scalar>;
   using KinodynamicsFwdData = KinodynamicsFwdDataTpl<Scalar>;
   using KinodynamicsFwdDynamics = KinodynamicsFwdDynamicsTpl<Scalar>;
+  using VkinodynamicsFwdData = VkinodynamicsFwdDataTpl<Scalar>;
+  using VkinodynamicsFwdDynamics = VkinodynamicsFwdDynamicsTpl<Scalar>;
   using Manifold = proxsuite::nlp::MultibodyPhaseSpace<Scalar>;
   using ManifoldPtr = shared_ptr<Manifold>;
+  using ManifoldCP = proxsuite::nlp::CartesianProductTpl<Scalar>;
+  using ManifoldCPPtr = shared_ptr<ManifoldCP>;
   using Vector3s = typename math_types<Scalar>::Vector3s;
 
   using Model = pinocchio::ModelTpl<Scalar>;
@@ -41,6 +47,24 @@ void exposeKinodynamics() {
   bp::class_<KinodynamicsFwdData, bp::bases<ODEData>>("KinodynamicsFwdData",
                                                       bp::no_init)
       .def_readwrite("pin_data", &KinodynamicsFwdData::pin_data_);
+
+  bp::class_<VkinodynamicsFwdDynamics, bp::bases<ODEAbstract>>(
+      "VkinodynamicsFwdDynamics",
+      "Centroidal forward dynamics + kinematics using Pinocchio.",
+      bp::init<const ManifoldCPPtr &, const Model &, const Vector3s &,
+               const std::vector<bool> &,
+               const std::vector<pinocchio::FrameIndex> &, const int>(
+          "Constructor.",
+          bp::args("self", "space", "model", "gravity", "contact_states",
+                   "contact_ids", "force_size")))
+      .def_readwrite("contact_states",
+                     &VkinodynamicsFwdDynamics::contact_states_);
+
+  bp::register_ptr_to_python<shared_ptr<VkinodynamicsFwdData>>();
+
+  bp::class_<VkinodynamicsFwdData, bp::bases<ODEData>>("VkinodynamicsFwdData",
+                                                       bp::no_init)
+      .def_readwrite("pin_data", &VkinodynamicsFwdData::pin_data_);
 }
 } // namespace python
 } // namespace aligator
