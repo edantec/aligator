@@ -47,7 +47,7 @@ void KinodynamicsFwdDynamicsTpl<Scalar>::forward(const ConstVectorRef &x,
   pinocchio::forwardKinematics(pin_model_, pdata, q);
   pinocchio::centerOfMass(pin_model_, pdata, q, v);
 
-  d.Agu_inv_ = pdata.Ag.leftCols(6).inverse();
+  d.Agu_inv_ = pdata.Ag.template leftCols<6>().inverse();
 
   // Compute external forces component
   d.cforces_.setZero();

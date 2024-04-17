@@ -278,7 +278,11 @@ def test_wrench_cone():
     L = 0.1
     W = 0.05
 
-    fun = aligator.WrenchConeResidual(ndx, nu, k, mu, L, W)
+    R = np.array(
+        [[0.70710678, -0.70710678, 0.0], [0.70710678, 0.70710678, 0.0], [0.0, 0.0, 1.0]]
+    )
+
+    fun = aligator.WrenchConeResidual(ndx, nu, k, mu, L, W, R)
     fdata = fun.createData()
 
     fun.evaluate(x0, u0, x0, fdata)

@@ -49,7 +49,7 @@ void VkinodynamicsFwdDynamicsTpl<Scalar>::forward(const ConstVectorRef &x,
   pinocchio::forwardKinematics(pin_model_, pdata, q);
   pinocchio::centerOfMass(pin_model_, pdata, q);
 
-  d.Agu_inv_ = pdata.Ag.leftCols(6).inverse();
+  d.Agu_inv_ = pdata.Ag.template leftCols<6>().inverse();
 
   // Compute external forces component
   d.cforces_.setZero();
@@ -83,8 +83,8 @@ void VkinodynamicsFwdDynamicsTpl<Scalar>::forward(const ConstVectorRef &x,
 
   // Compute base acceleration with respect to whole-body motion and centroidal
   // dynamics
-  d.xdot_.template head<6>() =
-      d.Agu_inv_ * (x.template tail<6>() - pdata.Ag.rightCols(nj_) * vj);
+  d.xdot_.template head<6>() = 1 / mass_ * x.template tail<6>();
+  // d.Agu_inv_ * (x.template tail<6>() - pdata.Ag.rightCols(nj_) * vj);
 
   // Simple kinematics integration
   d.xdot_.segment(6, nj_) = vj;
@@ -129,7 +129,7 @@ void VkinodynamicsFwdDynamicsTpl<Scalar>::dForward(const ConstVectorRef &x,
   pinocchio::computeCentroidalDynamicsDerivatives(pin_model_, pdata, q, d.v0_,
                                                   d.a0_, d.dh_dq_, d.dhdot_dq_,
                                                   d.dhdot_dv_, d.dhdot_da_);
-  d.Jx_.block(0, 0, 6, pin_model_.nv).noalias() -= d.Agu_inv_ * d.dh_dq_;
+  // d.Jx_.block(0, 0, 6, pin_model_.nv).noalias() -= d.Agu_inv_ * d.dh_dq_;
 
   // Compute dAgu_inv / dq
   d.v0_.setZero();
@@ -139,11 +139,13 @@ void VkinodynamicsFwdDynamicsTpl<Scalar>::dForward(const ConstVectorRef &x,
                                                   d.a0_, d.dh_dq_, d.dhdot_dq_,
                                                   d.dhdot_dv_, d.dhdot_da_);
 
-  d.Jx_.block(0, 0, 6, pin_model_.nv).noalias() -= d.Agu_inv_ * d.dhdot_dq_;
+  // d.Jx_.block(0, 0, 6, pin_model_.nv).noalias() -= d.Agu_inv_ * d.dhdot_dq_;
 
   // Compute dqu / dhg
 
-  d.Jx_.block(0, pin_model_.nv, 6, 6).noalias() += d.Agu_inv_;
+  // d.Jx_.block(0, pin_model_.nv, 6, 6).noalias() += d.Agu_inv_;
+  d.Jx_.block(0, pin_model_.nv, 6, 6).setIdentity();
+  d.Jx_.block(0, pin_model_.nv, 6, 6) /= mass_;
 
   ////// Ju computation //////
 
@@ -172,7 +174,8 @@ void VkinodynamicsFwdDynamicsTpl<Scalar>::dForward(const ConstVectorRef &x,
   }
 
   // Compute derivatives with respect to joint acceleration
-  d.Ju_.block(0, nf_, 6, nj_).noalias() = -d.Agu_inv_ * pdata.Ag.rightCols(nj_);
+  // d.Ju_.block(0, nf_, 6, nj_).noalias() = -d.Agu_inv_ *
+  // pdata.Ag.rightCols(nj_);
 }
 
 template <typename Scalar>

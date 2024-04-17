@@ -28,11 +28,11 @@ public:
   using Base = StageFunctionTpl<Scalar>;
   using BaseData = typename Base::Data;
   using Data = WrenchConeDataTpl<Scalar>;
+  using Matrix3s = Eigen::Matrix<Scalar, 3, 3>;
 
   WrenchConeResidualTpl(const int ndx, const int nu, const int k,
                         const double mu, const double half_length,
-                        const double half_width)
-      : Base(ndx, nu, 17), k_(k), mu_(mu), hL_(half_length), hW_(half_width) {}
+                        const double half_width, const Matrix3s &R);
 
   void evaluate(const ConstVectorRef &, const ConstVectorRef &u,
                 const ConstVectorRef &, BaseData &data) const;
@@ -40,23 +40,25 @@ public:
   void computeJacobians(const ConstVectorRef &, const ConstVectorRef &,
                         const ConstVectorRef &, BaseData &data) const;
 
+  void updateWrenchCone(const Matrix3s &R);
+
   shared_ptr<BaseData> createData() const {
     return allocate_shared_eigen_aligned<Data>(this);
   }
+  Eigen::Matrix<Scalar, 17, 6> A_; // Matrix of contact inequalities
 
 protected:
-  int k_;     // Contact index corresponding to the contact frame
-  double mu_; // Friction coefficient
-  double hL_; // Half-length of the contact frame
-  double hW_; // Half-width of the contact frame
+  int k_;         // Contact index corresponding to the contact frame
+  double mu_;     // Friction coefficient
+  double hL_;     // Half-length of the contact frame
+  double hW_;     // Half-width of the contact frame
+  Vector3s temp_; // For internal computation
 };
 
 template <typename Scalar>
 struct WrenchConeDataTpl : StageFunctionDataTpl<Scalar> {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using Base = StageFunctionDataTpl<Scalar>;
-
-  Eigen::Matrix<Scalar, 17, 6> Jtemp_;
 
   WrenchConeDataTpl(const WrenchConeResidualTpl<Scalar> *model);
 };
