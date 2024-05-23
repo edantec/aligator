@@ -19,7 +19,7 @@ template <typename _Scalar> struct ContinuousDynamicsAbstractTpl {
   using Scalar = _Scalar;
   ALIGATOR_DYNAMIC_TYPEDEFS(Scalar);
   using Manifold = ManifoldAbstractTpl<Scalar>;
-  using ManifoldPtr = shared_ptr<Manifold>;
+  using ManifoldPtr = std::reference_wrapper<Manifold>;
   using Data = ContinuousDynamicsDataTpl<Scalar>;
 
   /// State space.
@@ -27,11 +27,11 @@ template <typename _Scalar> struct ContinuousDynamicsAbstractTpl {
   /// Control space dimension.
   const int nu_;
 
-  inline int ndx() const { return space_->ndx(); }
+  inline int ndx() const { return space_.get().ndx(); }
   inline int nu() const { return nu_; }
 
   /// @brief  Return a reference to the state space.
-  inline const Manifold &space() const { return *space_; }
+  inline const Manifold &space() const { return space_.get(); }
 
   ContinuousDynamicsAbstractTpl(ManifoldPtr space, const int nu);
 

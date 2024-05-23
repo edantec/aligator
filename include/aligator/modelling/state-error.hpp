@@ -25,25 +25,25 @@ struct StateOrControlErrorResidual<_Scalar, 0> : UnaryFunctionTpl<_Scalar> {
   using Manifold = ManifoldAbstractTpl<Scalar>;
   using VectorSpace = proxsuite::nlp::VectorSpaceTpl<Scalar, Eigen::Dynamic>;
 
-  shared_ptr<Manifold> space_;
+  std::reference_wrapper<Manifold> space_;
   VectorXs target_;
 
-  StateOrControlErrorResidual(const shared_ptr<Manifold> &xspace, const int nu,
-                              const ConstVectorRef &target)
-      : Base(xspace->ndx(), nu, xspace->ndx()), space_(xspace),
+  StateOrControlErrorResidual(const std::reference_wrapper<Manifold> &xspace,
+                              const int nu, const ConstVectorRef &target)
+      : Base(xspace.get().ndx(), nu, xspace.get().ndx()), space_(xspace),
         target_(target) {
-    if (!xspace->isNormalized(target)) {
+    if (!xspace.get().isNormalized(target)) {
       ALIGATOR_RUNTIME_ERROR(
           "Target parameter invalid (not a viable element of state manifold.)");
     }
   }
 
   void evaluate(const ConstVectorRef &x, Data &data) const override {
-    space_->difference(x, target_, data.value_);
+    space_.get().difference(x, target_, data.value_);
   }
 
   void computeJacobians(const ConstVectorRef &x, Data &data) const override {
-    space_->Jdifference(x, target_, data.Jx_, 0);
+    space_.get().Jdifference(x, target_, data.Jx_, 0);
   }
 };
 
@@ -57,36 +57,42 @@ struct StateOrControlErrorResidual : StageFunctionTpl<_Scalar> {
   using Manifold = ManifoldAbstractTpl<Scalar>;
   using VectorSpace = proxsuite::nlp::VectorSpaceTpl<Scalar, Eigen::Dynamic>;
 
-  shared_ptr<Manifold> space_;
+  std::reference_wrapper<Manifold> space_;
   VectorXs target_;
 
   /// @brief Constructor using the state space, control dimension and state
   /// target.
   template <unsigned int N = arg, typename = std::enable_if_t<N == 2>>
-  StateOrControlErrorResidual(const shared_ptr<Manifold> &xspace, const int nu,
-                              const ConstVectorRef &target);
+  StateOrControlErrorResidual(const std::reference_wrapper<Manifold> &xspace,
+                              const int nu, const ConstVectorRef &target);
 
   /// @brief Constructor using the state space dimension, control manifold and
   ///        control target.
   template <unsigned int N = arg, typename = std::enable_if_t<N == 1>>
-  StateOrControlErrorResidual(const int ndx, const shared_ptr<Manifold> &uspace,
+  StateOrControlErrorResidual(const int ndx,
+                              const std::reference_wrapper<Manifold> &uspace,
                               const ConstVectorRef &target)
-      : Base(ndx, uspace->nx(), uspace->ndx()), space_(uspace),
+      : Base(ndx, uspace.get().nx(), uspace.get().ndx()), space_(uspace),
         target_(target) {
     check_target_viable();
+  }
+
+  static auto get_vector_space(int nx) {
+    VectorSpace v = VectorSpace(nx);
+    return std::ref(v);
   }
 
   /// @brief Constructor using state space and control space dimensions,
   ///        the control space is assumed to be Euclidean.
   template <unsigned int N = arg, typename = std::enable_if_t<N == 1>>
   StateOrControlErrorResidual(const int ndx, const ConstVectorRef &target)
-      : StateOrControlErrorResidual(
-            ndx, std::make_shared<VectorSpace>(target.size()), target) {}
+      : StateOrControlErrorResidual(ndx, get_vector_space(target.size()),
+                                    target) {}
 
   template <unsigned int N = arg, typename = std::enable_if_t<N == 1>>
   StateOrControlErrorResidual(const int ndx, const int nu)
-      : Base(ndx, nu, ndx, nu), space_(std::make_shared<VectorSpace>(nu)),
-        target_(space_->neutral()) {
+      : Base(ndx, nu, ndx, nu), space_(get_vector_space(nu)),
+        target_(space_.get().neutral()) {
     check_target_viable();
   }
 
@@ -94,10 +100,10 @@ struct StateOrControlErrorResidual : StageFunctionTpl<_Scalar> {
                 const ConstVectorRef &y, Data &data) const {
     switch (arg) {
     case 1:
-      space_->difference(target_, u, data.value_);
+      space_.get().difference(target_, u, data.value_);
       break;
     case 2:
-      space_->difference(target_, y, data.value_);
+      space_.get().difference(target_, y, data.value_);
       break;
     default:
       break;
@@ -108,10 +114,10 @@ struct StateOrControlErrorResidual : StageFunctionTpl<_Scalar> {
                         const ConstVectorRef &y, Data &data) const {
     switch (arg) {
     case 1:
-      space_->Jdifference(target_, u, data.Ju_, 1);
+      space_.get().Jdifference(target_, u, data.Ju_, 1);
       break;
     case 2:
-      space_->Jdifference(target_, y, data.Jy_, 1);
+      space_.get().Jdifference(target_, y, data.Jy_, 1);
       break;
     default:
       break;
@@ -120,7 +126,7 @@ struct StateOrControlErrorResidual : StageFunctionTpl<_Scalar> {
 
 private:
   inline void check_target_viable() const {
-    if (!space_->isNormalized(target_)) {
+    if (!space_.get().isNormalized(target_)) {
       ALIGATOR_RUNTIME_ERROR(
           "Target parameter invalid (not a viable element of state manifold.)");
     }
@@ -130,9 +136,10 @@ private:
 template <typename Scalar, unsigned int arg>
 template <unsigned int N, typename>
 StateOrControlErrorResidual<Scalar, arg>::StateOrControlErrorResidual(
-    const shared_ptr<Manifold> &xspace, const int nu,
+    const std::reference_wrapper<Manifold> &xspace, const int nu,
     const ConstVectorRef &target)
-    : Base(xspace->ndx(), nu, xspace->ndx()), space_(xspace), target_(target) {
+    : Base(xspace.get().ndx(), nu, xspace.get().ndx()), space_(xspace),
+      target_(target) {
   check_target_viable();
 }
 } // namespace detail

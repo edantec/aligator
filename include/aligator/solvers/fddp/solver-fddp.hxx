@@ -59,7 +59,7 @@ Scalar SolverFDDPTpl<Scalar>::forwardPass(const Problem &problem,
   {
     const auto &space = problem.stages_[0]->xspace_;
     workspace.dxs[0] = alpha * fs[0];
-    space->integrate(results.xs[0], workspace.dxs[0], xs_try[0]);
+    space.get().integrate(results.xs[0], workspace.dxs[0], xs_try[0]);
   }
   Scalar traj_cost_ = 0.;
 
@@ -81,14 +81,15 @@ Scalar SolverFDDPTpl<Scalar>::forwardPass(const Problem &problem,
     const ExplicitDynamicsData &dd = stage_get_dynamics_data(sd);
 
     workspace.dxs[i + 1] = (alpha - 1.) * fs[i + 1]; // use as tmp variable
-    sm.xspace_next_->integrate(dd.xnext_, workspace.dxs[i + 1], xs_try[i + 1]);
+    sm.xspace_next_.get().integrate(dd.xnext_, workspace.dxs[i + 1],
+                                    xs_try[i + 1]);
     const CostData &cd = *sd.cost_data;
 
     ALIGATOR_RAISE_IF_NAN_NAME(xs_try[i + 1], fmt::format("xs[{}]", i + 1));
     ALIGATOR_RAISE_IF_NAN_NAME(us_try[i], fmt::format("us[{}]", i));
 
-    sm.xspace_->difference(results.xs[i + 1], xs_try[i + 1],
-                           workspace.dxs[i + 1]);
+    sm.xspace_.get().difference(results.xs[i + 1], xs_try[i + 1],
+                                workspace.dxs[i + 1]);
 
     traj_cost_ += cd.value_;
   }
@@ -100,7 +101,8 @@ Scalar SolverFDDPTpl<Scalar>::forwardPass(const Problem &problem,
 
   traj_cost_ += cd_term.value_;
   const auto &space = internal::problem_last_state_space_helper(problem);
-  space->difference(results.xs[nsteps], xs_try[nsteps], workspace.dxs[nsteps]);
+  space.get().difference(results.xs[nsteps], xs_try[nsteps],
+                         workspace.dxs[nsteps]);
 
   prob_data.cost_ = traj_cost_;
   ALIGATOR_NOMALLOC_END;
@@ -162,14 +164,14 @@ Scalar SolverFDDPTpl<Scalar>::computeInfeasibility(const Problem &problem) {
   std::vector<VectorXs> &fs = workspace_.dyn_slacks;
 
   const auto &space = problem.stages_[0]->xspace_;
-  space->difference(xs[0], problem.getInitState(), fs[0]);
+  space.get().difference(xs[0], problem.getInitState(), fs[0]);
 
 #pragma omp parallel for num_threads(num_threads_)
   for (std::size_t i = 0; i < nsteps; i++) {
     const StageModel &sm = *problem.stages_[i];
     const auto &sd = *pd.stage_data[i];
     const ExplicitDynamicsData &dd = stage_get_dynamics_data(sd);
-    sm.xspace_->difference(xs[i + 1], dd.xnext_, fs[i + 1]);
+    sm.xspace_.get().difference(xs[i + 1], dd.xnext_, fs[i + 1]);
   }
   Scalar res = math::infty_norm(fs);
   ALIGATOR_NOMALLOC_END;

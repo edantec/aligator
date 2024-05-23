@@ -27,7 +27,7 @@ struct QuadraticResidualCostTpl : CostAbstractTpl<_Scalar> {
   shared_ptr<StageFunction> residual_;
   bool gauss_newton = true;
 
-  QuadraticResidualCostTpl(shared_ptr<Manifold> space,
+  QuadraticResidualCostTpl(std::reference_wrapper<Manifold> space,
                            shared_ptr<StageFunction> function,
                            const ConstMatrixRef &weights);
 

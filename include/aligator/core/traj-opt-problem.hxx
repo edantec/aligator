@@ -47,10 +47,9 @@ TrajOptProblemTpl<Scalar>::TrajOptProblemTpl(
 }
 
 template <typename Scalar>
-TrajOptProblemTpl<Scalar>::TrajOptProblemTpl(const ConstVectorRef &x0,
-                                             const int nu,
-                                             shared_ptr<Manifold> space,
-                                             shared_ptr<CostAbstract> term_cost)
+TrajOptProblemTpl<Scalar>::TrajOptProblemTpl(
+    const ConstVectorRef &x0, const int nu,
+    std::reference_wrapper<Manifold> space, shared_ptr<CostAbstract> term_cost)
     : TrajOptProblemTpl(createStateError(x0, space, nu), term_cost) {}
 
 template <typename Scalar>

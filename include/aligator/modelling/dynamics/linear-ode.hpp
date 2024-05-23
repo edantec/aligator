@@ -17,7 +17,8 @@ template <typename _Scalar> struct LinearODETpl : ODEAbstractTpl<_Scalar> {
   using Base = ODEAbstractTpl<Scalar>;
   using ODEData = ODEDataTpl<Scalar>;
   using Manifold = ManifoldAbstractTpl<Scalar>;
-  using ManifoldPtr = shared_ptr<Manifold>;
+  using ManifoldPtr = std::reference_wrapper<Manifold>;
+  using VectorSpace = proxsuite::nlp::VectorSpaceTpl<Scalar>;
 
   MatrixXs A_, B_;
   VectorXs c_;
@@ -27,13 +28,14 @@ template <typename _Scalar> struct LinearODETpl : ODEAbstractTpl<_Scalar> {
   LinearODETpl(const ManifoldPtr &space, const MatrixXs &A, const MatrixXs &B,
                const VectorXs &c)
       : Base(space, (int)B.cols()), A_(A), B_(B), c_(c) {
-    if (A.cols() != space->ndx()) {
+    if (A.cols() != space.get().ndx()) {
       ALIGATOR_DOMAIN_ERROR(fmt::format(
           "A.cols() should be equal to space.ndx()! (got {:d} and {:d})",
-          A.cols(), space->ndx()));
+          A.cols(), space.get().ndx()));
     }
-    bool rows_ok = (A.rows() == space->ndx()) && (B.rows() == space->ndx()) &&
-                   (c.rows() == space->ndx());
+    bool rows_ok = (A.rows() == space.get().ndx()) &&
+                   (B.rows() == space.get().ndx()) &&
+                   (c.rows() == space.get().ndx());
     if (!rows_ok) {
       ALIGATOR_DOMAIN_ERROR("Input matrices have wrong number of rows.");
     }
@@ -43,10 +45,13 @@ template <typename _Scalar> struct LinearODETpl : ODEAbstractTpl<_Scalar> {
    * Constructor matrices \f$A,B\f$ and constant term \f$c\f$.
    * The state space is inferred to be a vector space.
    */
+  static auto get_vector_space(int nx) {
+    VectorSpace v = VectorSpace(nx);
+    return std::ref(v);
+  }
+
   LinearODETpl(const MatrixXs &A, const MatrixXs &B, const VectorXs &c)
-      : LinearODETpl(std::make_shared<proxsuite::nlp::VectorSpaceTpl<Scalar>>(
-                         (int)A.rows()),
-                     A, B, c) {}
+      : LinearODETpl(get_vector_space((int)A.rows()), A, B, c) {}
 
   void forward(const ConstVectorRef &x, const ConstVectorRef &u,
                ODEData &data) const;

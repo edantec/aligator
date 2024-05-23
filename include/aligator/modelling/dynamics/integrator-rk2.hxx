@@ -21,11 +21,11 @@ void IntegratorRK2Tpl<Scalar>::forward(const ConstVectorRef &x,
 
   this->ode_->forward(x, u, cd1);
   d.dx1_ = dt_2_ * cd1.xdot_;
-  this->space_next_->integrate(x, d.dx1_, d.x1_);
+  this->space_next_.get().integrate(x, d.dx1_, d.x1_);
 
   this->ode_->forward(d.x1_, u, cd2);
   d.dx_ = timestep_ * cd2.xdot_;
-  this->space_next_->integrate(x, d.dx_, d.xnext_);
+  this->space_next_.get().integrate(x, d.dx_, d.xnext_);
 }
 
 template <typename Scalar>
@@ -42,9 +42,9 @@ void IntegratorRK2Tpl<Scalar>::dForward(const ConstVectorRef &x,
   this->ode_->dForward(x, u, cd1);
   d.Jx_ = dt_2_ * cd1.Jx_;
   d.Ju_ = dt_2_ * cd1.Ju_;
-  this->space_next_->JintegrateTransport(x, d.dx1_, d.Jx_, 1);
-  this->space_next_->JintegrateTransport(x, d.dx1_, d.Ju_, 1);
-  this->space_next_->Jintegrate(x, d.dx1_, d.Jtmp_xnext, 0);
+  this->space_next_.get().JintegrateTransport(x, d.dx1_, d.Jx_, 1);
+  this->space_next_.get().JintegrateTransport(x, d.dx1_, d.Ju_, 1);
+  this->space_next_.get().Jintegrate(x, d.dx1_, d.Jtmp_xnext, 0);
   d.Jx_ += d.Jtmp_xnext;
 
   // J = d(x+dx)_dz = d(x+dx)_dx1 * dx1_dz
@@ -52,10 +52,10 @@ void IntegratorRK2Tpl<Scalar>::dForward(const ConstVectorRef &x,
   this->ode_->dForward(d.x1_, u, cd2);
   d.Jx_ = (timestep_ * cd2.Jx_) * d.Jx_;
   d.Ju_ = (timestep_ * cd2.Jx_) * d.Ju_ + timestep_ * cd2.Ju_;
-  this->space_next_->JintegrateTransport(d.x1_, d.dx_, d.Jx_, 1);
-  this->space_next_->JintegrateTransport(d.x1_, d.dx_, d.Ju_, 1);
+  this->space_next_.get().JintegrateTransport(d.x1_, d.dx_, d.Jx_, 1);
+  this->space_next_.get().JintegrateTransport(d.x1_, d.dx_, d.Ju_, 1);
 
-  this->space_next_->Jintegrate(d.x1_, d.dx_, d.Jtmp_xnext, 0);
+  this->space_next_.get().Jintegrate(d.x1_, d.dx_, d.Jtmp_xnext, 0);
   d.Jx_ += d.Jtmp_xnext;
 }
 

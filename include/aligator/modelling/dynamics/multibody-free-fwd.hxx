@@ -28,8 +28,8 @@ template <typename Scalar>
 MultibodyFreeFwdDynamicsTpl<Scalar>::MultibodyFreeFwdDynamicsTpl(
     const ManifoldPtr &state)
     : MultibodyFreeFwdDynamicsTpl(
-          state,
-          MatrixXs::Identity(state->getModel().nv, state->getModel().nv)) {}
+          state, MatrixXs::Identity(state.get().getModel().nv,
+                                    state.get().getModel().nv)) {}
 
 template <typename Scalar>
 void MultibodyFreeFwdDynamicsTpl<Scalar>::forward(const ConstVectorRef &x,
@@ -37,7 +37,7 @@ void MultibodyFreeFwdDynamicsTpl<Scalar>::forward(const ConstVectorRef &x,
                                                   BaseData &data) const {
   Data &d = static_cast<Data &>(data);
   d.tau_.noalias() = actuation_matrix_ * u;
-  const pinocchio::ModelTpl<Scalar> &model = space_->getModel();
+  const pinocchio::ModelTpl<Scalar> &model = space_.get().getModel();
   const int nq = model.nq;
   const int nv = model.nv;
   const auto q = x.head(nq);
@@ -51,7 +51,7 @@ void MultibodyFreeFwdDynamicsTpl<Scalar>::dForward(const ConstVectorRef &x,
                                                    const ConstVectorRef &,
                                                    BaseData &data) const {
   Data &d = static_cast<Data &>(data);
-  const pinocchio::ModelTpl<Scalar> &model = space_->getModel();
+  const pinocchio::ModelTpl<Scalar> &model = space_.get().getModel();
   const int nq = model.nq;
   const int nv = model.nv;
   auto da_dx = d.Jx_.bottomRows(nv);
@@ -71,11 +71,11 @@ template <typename Scalar>
 MultibodyFreeFwdDataTpl<Scalar>::MultibodyFreeFwdDataTpl(
     const MultibodyFreeFwdDynamicsTpl<Scalar> *cont_dyn)
     : Base(cont_dyn->ndx(), cont_dyn->nu()),
-      tau_(cont_dyn->space_->getModel().nv),
+      tau_(cont_dyn->space_.get().getModel().nv),
       dtau_dx_(cont_dyn->ntau(), cont_dyn->ndx()),
       dtau_du_(cont_dyn->actuation_matrix_), pin_data_() {
   tau_.setZero();
-  const pinocchio::ModelTpl<Scalar> &model = cont_dyn->space_->getModel();
+  const pinocchio::ModelTpl<Scalar> &model = cont_dyn->space_.get().getModel();
   pin_data_ = PinDataType(model);
   this->Jx_.topRightCorner(model.nv, model.nv).setIdentity();
 }

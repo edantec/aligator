@@ -119,7 +119,7 @@ template <typename _Scalar> struct TrajOptProblemTpl {
   /// @ingroup ctor2
   /// @brief Constructor for an initial value problem.
   TrajOptProblemTpl(const ConstVectorRef &x0, const int nu,
-                    shared_ptr<Manifold> space,
+                    std::reference_wrapper<Manifold> space,
                     shared_ptr<CostAbstract> term_cost);
 
   bool initCondIsStateError() const { return init_state_error_ != nullptr; }
@@ -196,7 +196,7 @@ protected:
 
 private:
   static auto createStateError(const ConstVectorRef &x0,
-                               const shared_ptr<Manifold> &space,
+                               const std::reference_wrapper<Manifold> &space,
                                const int nu) {
     return std::make_shared<StateErrorResidual>(space, nu, x0);
   }
@@ -211,7 +211,7 @@ auto problem_last_state_space_helper(const TrajOptProblemTpl<Scalar> &problem) {
 /// Get dimension of problem's last stage/cost function.
 template <typename Scalar>
 int problem_last_ndx_helper(const TrajOptProblemTpl<Scalar> &problem) {
-  return problem_last_state_space_helper(problem)->ndx();
+  return problem_last_state_space_helper(problem).get().ndx();
 }
 } // namespace internal
 

@@ -7,6 +7,7 @@
 #include "aligator/core/constraint.hpp"
 
 #include "aligator/core/clone.hpp"
+#include <functional>
 
 namespace aligator {
 
@@ -24,7 +25,7 @@ public:
   ALIGATOR_DYNAMIC_TYPEDEFS(Scalar);
 
   using Manifold = ManifoldAbstractTpl<Scalar>;
-  using ManifoldPtr = shared_ptr<Manifold>;
+  using ManifoldPtr = std::reference_wrapper<Manifold>;
   using Dynamics = DynamicsModelTpl<Scalar>;
   using DynamicsPtr = shared_ptr<Dynamics>;
   using FunctionPtr = shared_ptr<StageFunctionTpl<Scalar>>;
@@ -52,9 +53,9 @@ public:
   StageModelTpl(CostPtr cost, DynamicsPtr dynamics);
   virtual ~StageModelTpl() = default;
 
-  const Manifold &xspace() const { return *xspace_; }
-  const Manifold &uspace() const { return *uspace_; }
-  const Manifold &xspace_next() const { return *xspace_next_; }
+  const Manifold &xspace() const { return xspace_.get(); }
+  const Manifold &uspace() const { return uspace_.get(); }
+  const Manifold &xspace_next() const { return xspace_next_.get(); }
 
   const Cost &cost() const { return *cost_; }
   /// Whether the stage's dynamics model can be accessed.
@@ -65,11 +66,11 @@ public:
     return *dynamics_;
   }
 
-  int nx1() const { return xspace_->nx(); }
-  int ndx1() const { return xspace_->ndx(); }
-  int nu() const { return uspace_->ndx(); }
-  int nx2() const { return xspace_next_->nx(); }
-  int ndx2() const { return xspace_next_->ndx(); }
+  int nx1() const { return xspace_.get().nx(); }
+  int ndx1() const { return xspace_.get().ndx(); }
+  int nu() const { return uspace_.get().ndx(); }
+  int nx2() const { return xspace_next_.get().nx(); }
+  int ndx2() const { return xspace_next_.get().ndx(); }
   /// Total number of constraints
   int nc() const { return (int)constraints_.totalDim(); }
 

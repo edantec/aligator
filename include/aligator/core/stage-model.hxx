@@ -14,7 +14,8 @@ namespace {
 
 using proxsuite::nlp::VectorSpaceTpl;
 template <typename T> auto make_vector_space(const int n) {
-  return std::make_shared<VectorSpaceTpl<T>>(n);
+  VectorSpaceTpl<T> v = VectorSpaceTpl<T>(n);
+  return std::ref(v);
 }
 
 } // namespace

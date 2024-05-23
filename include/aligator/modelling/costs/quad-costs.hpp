@@ -34,7 +34,8 @@ public:
   VectorXs interp_u;
 
   static auto get_vector_space(Eigen::Index nx) {
-    return std::make_shared<VectorSpace>((int)nx);
+    VectorSpace v = VectorSpace((int)nx);
+    return std::ref(v);
   }
 
   QuadraticCostTpl(const ConstMatrixRef &w_x, const ConstMatrixRef &w_u,

@@ -18,7 +18,7 @@ void ExplicitDynamicsModelTpl<Scalar>::evaluate(const ConstVectorRef &x,
   // value to the difference between y and the xnext_.
   Data &d = static_cast<Data &>(data);
   this->forward(x, u, d);
-  this->space_next_->difference(y, d.xnext_, d.value_);
+  this->space_next_.get().difference(y, d.xnext_, d.value_);
 }
 
 template <typename Scalar>
@@ -29,8 +29,8 @@ void ExplicitDynamicsModelTpl<Scalar>::computeJacobians(const ConstVectorRef &x,
   Data &data_ = static_cast<Data &>(data);
   this->dForward(x, u, data_);
   // compose by jacobians of log (xout - y)
-  this->space_next_->Jdifference(y, data_.xnext_, data_.Jy_, 0);
-  this->space_next_->Jdifference(y, data_.xnext_, data_.Jtmp_xnext, 1);
+  this->space_next_.get().Jdifference(y, data_.xnext_, data_.Jy_, 0);
+  this->space_next_.get().Jdifference(y, data_.xnext_, data_.Jtmp_xnext, 1);
   data_.Jx_ = data_.Jtmp_xnext * data_.Jx_;
   data_.Ju_ = data_.Jtmp_xnext * data_.Ju_;
 }

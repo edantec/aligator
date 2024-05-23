@@ -30,7 +30,7 @@ struct CentroidalFwdDynamicsTpl : ODEAbstractTpl<_Scalar> {
   using ContDataAbstract = ContinuousDynamicsDataTpl<Scalar>;
   using Data = CentroidalFwdDataTpl<Scalar>;
   using Manifold = proxsuite::nlp::VectorSpaceTpl<Scalar>;
-  using ManifoldPtr = shared_ptr<Manifold>;
+  using ManifoldPtr = std::reference_wrapper<Manifold>;
   using Matrix3s = Eigen::Matrix<Scalar, 3, 3>;
   using ContactMap = ContactMapTpl<Scalar>;
 
@@ -43,7 +43,7 @@ struct CentroidalFwdDynamicsTpl : ODEAbstractTpl<_Scalar> {
   ContactMap contact_map_;
   int force_size_;
 
-  const Manifold &space() const { return *space_; }
+  const Manifold &space() const { return space_.get(); }
 
   CentroidalFwdDynamicsTpl(const ManifoldPtr &state, const double mass,
                            const Vector3s &gravity,

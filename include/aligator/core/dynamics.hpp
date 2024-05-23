@@ -21,7 +21,7 @@ struct DynamicsModelTpl : StageFunctionTpl<_Scalar> {
   using Base = StageFunctionTpl<Scalar>;
   using Data = DynamicsDataTpl<Scalar>;
   using Manifold = ManifoldAbstractTpl<Scalar>;
-  using ManifoldPtr = shared_ptr<Manifold>;
+  using ManifoldPtr = std::reference_wrapper<Manifold>;
 
   /// State space for the input.
   ManifoldPtr space_;
@@ -29,14 +29,14 @@ struct DynamicsModelTpl : StageFunctionTpl<_Scalar> {
   ManifoldPtr space_next_;
 
   /// @copybrief space_
-  const Manifold &space() const { return *space_; }
+  const Manifold &space() const { return space_.get(); }
   /// @copybrief space_next_
-  const Manifold &space_next() const { return *space_next_; }
+  const Manifold &space_next() const { return space_next_.get(); }
   /// @brief Check if this dynamics model is implicit or explicit.
   virtual bool is_explicit() const { return false; }
 
-  inline int nx1() const { return space_->nx(); }
-  inline int nx2() const { return space_next_->nx(); }
+  inline int nx1() const { return space_.get().nx(); }
+  inline int nx2() const { return space_next_.get().nx(); }
 
   /**
    * @brief  Constructor for dynamics.

@@ -32,14 +32,14 @@ struct MultibodyConstraintFwdDynamicsTpl : ODEAbstractTpl<_Scalar> {
   using ProxSettings = pinocchio::ProximalSettingsTpl<Scalar>;
   using Manifold = proxsuite::nlp::MultibodyPhaseSpace<Scalar>;
 
-  using ManifoldPtr = shared_ptr<Manifold>;
+  using ManifoldPtr = std::reference_wrapper<Manifold>;
   ManifoldPtr space_;
   MatrixXs actuation_matrix_;
   RigidConstraintModelVector constraint_models_;
   ProxSettings prox_settings_;
 
-  const Manifold &space() const { return *space_; }
-  int ntau() const { return space_->getModel().nv; }
+  const Manifold &space() const { return space_.get(); }
+  int ntau() const { return space_.get().getModel().nv; }
 
   MultibodyConstraintFwdDynamicsTpl(
       const ManifoldPtr &state, const MatrixXs &actuation,

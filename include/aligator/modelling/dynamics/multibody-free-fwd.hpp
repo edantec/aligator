@@ -30,15 +30,15 @@ struct MultibodyFreeFwdDynamicsTpl : ODEAbstractTpl<_Scalar> {
   using ContDataAbstract = ContinuousDynamicsDataTpl<Scalar>;
   using Data = MultibodyFreeFwdDataTpl<Scalar>;
   using Manifold = proxsuite::nlp::MultibodyPhaseSpace<Scalar>;
-  using ManifoldPtr = shared_ptr<Manifold>;
+  using ManifoldPtr = std::reference_wrapper<Manifold>;
 
   using Base::nu_;
 
   ManifoldPtr space_;
   MatrixXs actuation_matrix_;
 
-  const Manifold &space() const { return *space_; }
-  int ntau() const { return space_->getModel().nv; }
+  const Manifold &space() const { return space_.get(); }
+  int ntau() const { return space_.get().getModel().nv; }
 
   MultibodyFreeFwdDynamicsTpl(const ManifoldPtr &state,
                               const MatrixXs &actuation);

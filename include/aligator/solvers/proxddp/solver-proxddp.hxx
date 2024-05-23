@@ -100,15 +100,15 @@ Scalar SolverProxDDPTpl<Scalar>::tryLinearStep(const Problem &problem,
 
   for (std::size_t i = 0; i < nsteps; i++) {
     const StageModel &stage = *problem.stages_[i];
-    stage.xspace_->integrate(results.xs[i], alpha * workspace.dxs[i],
-                             workspace.trial_xs[i]);
-    stage.uspace_->integrate(results.us[i], alpha * workspace.dus[i],
-                             workspace.trial_us[i]);
+    stage.xspace_.get().integrate(results.xs[i], alpha * workspace.dxs[i],
+                                  workspace.trial_xs[i]);
+    stage.uspace_.get().integrate(results.us[i], alpha * workspace.dus[i],
+                                  workspace.trial_us[i]);
   }
   const StageModel &stage = *problem.stages_[nsteps - 1];
-  stage.xspace_next_->integrate(results.xs[nsteps],
-                                alpha * workspace.dxs[nsteps],
-                                workspace.trial_xs[nsteps]);
+  stage.xspace_next_.get().integrate(results.xs[nsteps],
+                                     alpha * workspace.dxs[nsteps],
+                                     workspace.trial_xs[nsteps]);
   TrajOptData &prob_data = workspace.problem_data;
   prob_data.cost_ =
       problem.evaluate(workspace.trial_xs, workspace.trial_us, prob_data);

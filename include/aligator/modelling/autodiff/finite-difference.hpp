@@ -21,7 +21,7 @@ struct finite_difference_impl : virtual _Base<_Scalar> {
   using BaseData = typename Base::Data;
   using Manifold = ManifoldAbstractTpl<Scalar>;
 
-  shared_ptr<Manifold> space_;
+  std::reference_wrapper<Manifold> space_;
   shared_ptr<Base> func_;
   Scalar fd_eps;
   int nx1, nx2;
@@ -49,17 +49,19 @@ struct finite_difference_impl : virtual _Base<_Scalar> {
 
   template <typename U = Base, class = std::enable_if_t<
                                    std::is_same_v<U, StageFunctionTpl<Scalar>>>>
-  finite_difference_impl(shared_ptr<Manifold> space, shared_ptr<U> func,
-                         const Scalar fd_eps)
+  finite_difference_impl(std::reference_wrapper<Manifold> space,
+                         shared_ptr<U> func, const Scalar fd_eps)
       : Base(func->ndx1, func->nu, func->ndx2, func->nr), space_(space),
-        func_(func), fd_eps(fd_eps), nx1(space->nx()), nx2(space->nx()) {}
+        func_(func), fd_eps(fd_eps), nx1(space.get().nx()),
+        nx2(space.get().nx()) {}
 
   template <typename U = Base, class = std::enable_if_t<
                                    std::is_same_v<U, DynamicsModelTpl<Scalar>>>>
-  finite_difference_impl(shared_ptr<Manifold> space, shared_ptr<U> func,
-                         const Scalar fd_eps, boost::mpl::false_ = {})
+  finite_difference_impl(std::reference_wrapper<Manifold> space,
+                         shared_ptr<U> func, const Scalar fd_eps,
+                         boost::mpl::false_ = {})
       : Base(space, func->nu, space), space_(space), func_(func),
-        fd_eps(fd_eps), nx1(space->nx()), nx2(space->nx()) {}
+        fd_eps(fd_eps), nx1(space.get().nx()), nx2(space.get().nx()) {}
 
   void evaluate(const ConstVectorRef &x, const ConstVectorRef &u,
                 const ConstVectorRef &y, BaseData &data) const {
@@ -77,7 +79,7 @@ struct finite_difference_impl : virtual _Base<_Scalar> {
 
     for (int i = 0; i < func_->ndx1; i++) {
       d.dx[i] = fd_eps;
-      space_->integrate(x, d.dx, d.xp);
+      space_.get().integrate(x, d.dx, d.xp);
       func_->evaluate(d.xp, u, y, *d.data_1);
       data.Jx_.col(i) = (vp - v0) / fd_eps;
       d.dx[i] = 0.;
@@ -85,7 +87,7 @@ struct finite_difference_impl : virtual _Base<_Scalar> {
 
     for (int i = 0; i < func_->ndx2; i++) {
       d.dy[i] = fd_eps;
-      space_->integrate(y, d.dy, d.yp);
+      space_.get().integrate(y, d.dy, d.yp);
       func_->evaluate(x, u, d.yp, *d.data_1);
       data.Jy_.col(i) = (vp - v0) / fd_eps;
       d.dy[i] = 0.;
@@ -132,7 +134,7 @@ struct FiniteDifferenceHelper
 
   ALIGATOR_DYNAMIC_TYPEDEFS(_Scalar);
 
-  FiniteDifferenceHelper(shared_ptr<Manifold> space,
+  FiniteDifferenceHelper(std::reference_wrapper<Manifold> space,
                          shared_ptr<StageFunction> func, const Scalar fd_eps)
       : StageFunction(func->ndx1, func->nu, func->ndx2, func->nr),
         Base(space, func, fd_eps) {}
@@ -152,7 +154,7 @@ struct DynamicsFiniteDifferenceHelper
 
   ALIGATOR_DYNAMIC_TYPEDEFS(_Scalar);
 
-  DynamicsFiniteDifferenceHelper(shared_ptr<Manifold> space,
+  DynamicsFiniteDifferenceHelper(std::reference_wrapper<Manifold> space,
                                  shared_ptr<DynamicsModel> func,
                                  const Scalar fd_eps)
       : DynamicsModel(space, func->nu, space), Base(space, func, fd_eps) {}
@@ -196,7 +198,7 @@ struct CostFiniteDifferenceHelper : CostAbstractTpl<Scalar> {
   void computeGradients(const ConstVectorRef &x, const ConstVectorRef &u,
                         CostData &data_) const override {
     Data &d = static_cast<Data &>(data_);
-    Manifold const &space = *this->space;
+    Manifold const &space = this->space.get();
 
     cost_->evaluate(x, u, *d.c1);
 

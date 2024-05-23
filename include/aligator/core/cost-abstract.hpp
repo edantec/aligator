@@ -17,14 +17,14 @@ template <typename _Scalar> struct CostAbstractTpl {
   using Manifold = ManifoldAbstractTpl<Scalar>;
 
   /// @brief State dimension
-  shared_ptr<Manifold> space;
+  std::reference_wrapper<Manifold> space;
   /// @brief Control dimension
   int nu;
 
-  int nx() const { return space->nx(); }
-  int ndx() const { return space->ndx(); }
+  int nx() const { return space.get().nx(); }
+  int ndx() const { return space.get().ndx(); }
 
-  CostAbstractTpl(shared_ptr<Manifold> space, const int nu)
+  CostAbstractTpl(std::reference_wrapper<Manifold> space, const int nu)
       : space(space), nu(nu) {}
 
   /// @brief Evaluate the cost function.

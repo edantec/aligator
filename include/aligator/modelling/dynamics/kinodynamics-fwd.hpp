@@ -34,7 +34,7 @@ struct KinodynamicsFwdDynamicsTpl : ODEAbstractTpl<_Scalar> {
   using ContDataAbstract = ContinuousDynamicsDataTpl<Scalar>;
   using Data = KinodynamicsFwdDataTpl<Scalar>;
   using Manifold = proxsuite::nlp::MultibodyPhaseSpace<Scalar>;
-  using ManifoldPtr = shared_ptr<Manifold>;
+  using ManifoldPtr = std::reference_wrapper<Manifold>;
   using Model = pinocchio::ModelTpl<Scalar>;
   using Matrix3s = Eigen::Matrix<Scalar, 3, 3>;
 
@@ -49,7 +49,7 @@ struct KinodynamicsFwdDynamicsTpl : ODEAbstractTpl<_Scalar> {
   std::vector<bool> contact_states_;
   std::vector<pinocchio::FrameIndex> contact_ids_;
 
-  const Manifold &space() const { return *space_; }
+  const Manifold &space() const { return space_.get(); }
 
   KinodynamicsFwdDynamicsTpl(
       const ManifoldPtr &state, const Model &model, const Vector3s &gravity,

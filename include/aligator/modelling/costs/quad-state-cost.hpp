@@ -20,7 +20,7 @@ struct QuadraticStateCostTpl : QuadraticResidualCostTpl<Scalar> {
   QuadraticStateCostTpl(shared_ptr<StateError> resdl, const MatrixXs &weights)
       : Base(resdl->space_, resdl, weights) {}
 
-  QuadraticStateCostTpl(shared_ptr<Manifold> space, const int nu,
+  QuadraticStateCostTpl(std::reference_wrapper<Manifold> space, const int nu,
                         const ConstVectorRef &target, const MatrixXs &weights)
       : QuadraticStateCostTpl(std::make_shared<StateError>(space, nu, target),
                               weights) {}
@@ -42,20 +42,21 @@ struct QuadraticControlCostTpl : QuadraticResidualCostTpl<Scalar> {
   using Manifold = ManifoldAbstractTpl<Scalar>;
   using Error = ControlErrorResidualTpl<Scalar>;
 
-  QuadraticControlCostTpl(shared_ptr<Manifold> space, shared_ptr<Error> resdl,
-                          const MatrixXs &weights)
+  QuadraticControlCostTpl(std::reference_wrapper<Manifold> space,
+                          shared_ptr<Error> resdl, const MatrixXs &weights)
       : Base(space, resdl, weights) {}
 
-  QuadraticControlCostTpl(shared_ptr<Manifold> space, int nu,
+  QuadraticControlCostTpl(std::reference_wrapper<Manifold> space, int nu,
                           const ConstMatrixRef &weights)
       : QuadraticControlCostTpl(
-            space, std::make_shared<Error>(space->ndx(), nu), weights) {}
+            space, std::make_shared<Error>(space.get().ndx(), nu), weights) {}
 
-  QuadraticControlCostTpl(shared_ptr<Manifold> space,
+  QuadraticControlCostTpl(std::reference_wrapper<Manifold> space,
                           const ConstVectorRef &target,
                           const ConstMatrixRef &weights)
       : QuadraticControlCostTpl(
-            space, std::make_shared<Error>(space->ndx(), target), weights) {}
+            space, std::make_shared<Error>(space.get().ndx(), target),
+            weights) {}
 
   void setTarget(const ConstVectorRef &target) { residual().target_ = target; }
   ConstVectorRef getTarget() const { return residual().target_; }

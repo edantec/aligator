@@ -35,7 +35,9 @@ template <typename _Scalar> struct DirectSumCostTpl : CostAbstractTpl<_Scalar> {
 private:
   using CartesianProduct = proxsuite::nlp::CartesianProductTpl<Scalar>;
   auto get_product_space() const {
-    return static_cast<CartesianProduct const *>(this->space.get());
+    std::shared_ptr<Manifold> mn =
+        std::make_shared<Manifold>(this->space.get());
+    return static_cast<CartesianProduct const *>(mn);
   }
   static Data &data_cast(BaseData &data) { return static_cast<Data &>(data); }
 };
