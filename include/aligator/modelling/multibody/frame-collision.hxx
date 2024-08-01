@@ -3,6 +3,7 @@
 #include "aligator/modelling/multibody/frame-collision.hpp"
 #include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
+#include <pinocchio/collision/distance.hpp>
 
 namespace aligator {
 
@@ -10,15 +11,14 @@ template <typename Scalar>
 void FrameCollisionResidualTpl<Scalar>::evaluate(const ConstVectorRef &x,
                                                  BaseData &data) const {
   Data &d = static_cast<Data &>(data);
-  const Model &model = *pin_model_;
   pinocchio::DataTpl<Scalar> &pdata = d.pin_data_;
-  pinocchio::forwardKinematics(model, pdata, x.head(model.nq));
-  pinocchio::updateFramePlacements(model, pdata);
+  pinocchio::forwardKinematics(pin_model_, pdata, x.head(pin_model_.nq));
+  pinocchio::updateFramePlacements(pin_model_, pdata);
 
   // computes the collision distance between pair of frames
-  pinocchio::updateGeometryPlacements(model, pdata, *geom_model_.get(),
-                                      d.geometry_, x.head(model.nq));
-  pinocchio::computeDistance(*geom_model_.get(), d.geometry_, frame_pair_id_);
+  pinocchio::updateGeometryPlacements(pin_model_, pdata, geom_model_,
+                                      d.geometry_, x.head(pin_model_.nq));
+  pinocchio::computeDistance(geom_model_, d.geometry_, frame_pair_id_);
 
   // calculate residual
   d.value_ = d.geometry_.distanceResults[frame_pair_id_].nearest_points[0] -
@@ -29,33 +29,45 @@ template <typename Scalar>
 void FrameCollisionResidualTpl<Scalar>::computeJacobians(const ConstVectorRef &,
                                                          BaseData &data) const {
   Data &d = static_cast<Data &>(data);
-  const Model &model = *pin_model_;
   pinocchio::DataTpl<Scalar> &pdata = d.pin_data_;
 
-  // calculate vector from joint to collision p1, expressed
-  // in local world aligned
+  // calculate vector from joint to collision p1 and joint to collision p2,
+  // expressed in local world aligned
   d.distance_ = d.geometry_.distanceResults[frame_pair_id_].nearest_points[0] -
-                pdata.oMi[joint_id_].translation();
-  pinocchio::computeJointJacobians(model, pdata);
-  pinocchio::getJointJacobian(model, pdata, joint_id_,
+                pdata.oMf[frame_id1_].translation();
+  d.distance2_ = d.geometry_.distanceResults[frame_pair_id_].nearest_points[1] -
+                 pdata.oMf[frame_id2_].translation();
+  pinocchio::computeJointJacobians(pin_model_, pdata);
+
+  pinocchio::getFrameJacobian(pin_model_, pdata, frame_id1_,
                               pinocchio::LOCAL_WORLD_ALIGNED, d.Jcol_);
+
+  pinocchio::getFrameJacobian(pin_model_, pdata, frame_id2_,
+                              pinocchio::LOCAL_WORLD_ALIGNED, d.Jcol2_);
 
   // compute Jacobian at p1
   d.Jcol_.template topRows<3>().noalias() +=
       pinocchio::skew(d.distance_).transpose() *
       d.Jcol_.template bottomRows<3>();
 
+  // compute Jacobian at p2
+  d.Jcol2_.template topRows<3>().noalias() +=
+      pinocchio::skew(d.distance2_).transpose() *
+      d.Jcol2_.template bottomRows<3>();
+
   // compute the residual derivatives
-  d.Jx_.topLeftCorner(3, model.nv) = d.Jcol_.template topRows<3>();
+  d.Jx_.leftCols(pin_model_.nv) =
+      d.Jcol_.template topRows<3>() - d.Jcol2_.template topRows<3>();
 }
 
 template <typename Scalar>
 FrameCollisionDataTpl<Scalar>::FrameCollisionDataTpl(
     const FrameCollisionResidualTpl<Scalar> &model)
-    : Base(model.ndx1, model.nu, model.ndx2, 3), pin_data_(*model.pin_model_),
-      geometry_(pinocchio::GeometryData(*model.geom_model_)),
-      Jcol_(6, model.pin_model_->nv) {
+    : Base(model.ndx1, model.nu, model.ndx2, 3), pin_data_(model.pin_model_),
+      geometry_(pinocchio::GeometryData(model.geom_model_)),
+      Jcol_(6, model.pin_model_.nv), Jcol2_(6, model.pin_model_.nv) {
   Jcol_.setZero();
+  Jcol2_.setZero();
 }
 
 } // namespace aligator

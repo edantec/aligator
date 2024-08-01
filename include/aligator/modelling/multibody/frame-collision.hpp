@@ -9,6 +9,7 @@
 #include <pinocchio/algorithm/jacobian.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
 #include <pinocchio/multibody/fcl.hpp>
+#include <proxsuite-nlp/third-party/polymorphic_cxx14.hpp>
 
 namespace aligator {
 
@@ -22,21 +23,36 @@ struct FrameCollisionResidualTpl : UnaryFunctionTpl<_Scalar>, frame_api {
   ALIGATOR_UNARY_FUNCTION_INTERFACE(Scalar);
   using BaseData = typename Base::Data;
   using Model = pinocchio::ModelTpl<Scalar>;
-  using ManifoldPtr = shared_ptr<ManifoldAbstractTpl<Scalar>>;
+  using ManifoldPtr = xyz::polymorphic<ManifoldAbstractTpl<Scalar>>;
   using SE3 = pinocchio::SE3Tpl<Scalar>;
   using Data = FrameCollisionDataTpl<Scalar>;
   using GeometryModel = pinocchio::GeometryModel;
 
-  shared_ptr<Model> pin_model_;
-  shared_ptr<GeometryModel> geom_model_;
+  Model pin_model_;
+  GeometryModel geom_model_;
 
-  FrameCollisionResidualTpl(const int ndx, const int nu,
-                            const shared_ptr<Model> &model,
-                            const shared_ptr<GeometryModel> &geom_model,
-                            const pinocchio::PairIndex frame_pair_id,
-                            const pinocchio::JointIndex joint_id)
+  FrameCollisionResidualTpl(const int ndx, const int nu, const Model &model,
+                            const GeometryModel &geom_model,
+                            const pinocchio::PairIndex frame_pair_id)
       : Base(ndx, nu, 3), pin_model_(model), geom_model_(geom_model),
-        frame_pair_id_(frame_pair_id), joint_id_(joint_id) {}
+        frame_pair_id_(frame_pair_id) {
+    joint_id1_ =
+        geom_model
+            .geometryObjects[geom_model.collisionPairs[frame_pair_id_].first]
+            .parentJoint;
+    joint_id2_ =
+        geom_model
+            .geometryObjects[geom_model.collisionPairs[frame_pair_id_].second]
+            .parentJoint;
+    frame_id1_ =
+        geom_model
+            .geometryObjects[geom_model.collisionPairs[frame_pair_id_].first]
+            .parentFrame;
+    frame_id2_ =
+        geom_model
+            .geometryObjects[geom_model.collisionPairs[frame_pair_id_].second]
+            .parentFrame;
+  }
 
   void evaluate(const ConstVectorRef &x, BaseData &data) const;
 
@@ -48,7 +64,10 @@ struct FrameCollisionResidualTpl : UnaryFunctionTpl<_Scalar>, frame_api {
 
 protected:
   pinocchio::PairIndex frame_pair_id_;
-  pinocchio::JointIndex joint_id_;
+  pinocchio::JointIndex joint_id1_;
+  pinocchio::JointIndex joint_id2_;
+  pinocchio::FrameIndex frame_id1_;
+  pinocchio::FrameIndex frame_id2_;
 };
 
 template <typename Scalar>
@@ -64,8 +83,10 @@ struct FrameCollisionDataTpl : StageFunctionDataTpl<Scalar> {
   PinGeom geometry_;
   /// Jacobian of the collision point
   typename math_types<Scalar>::Matrix6Xs Jcol_;
+  typename math_types<Scalar>::Matrix6Xs Jcol2_;
   /// Vector from joint point to collision point in world frame
   typename math_types<Scalar>::Vector3s distance_;
+  typename math_types<Scalar>::Vector3s distance2_;
 
   FrameCollisionDataTpl(const FrameCollisionResidualTpl<Scalar> &model);
 };

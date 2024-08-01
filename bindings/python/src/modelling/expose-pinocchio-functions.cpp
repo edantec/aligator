@@ -118,11 +118,11 @@ void exposeFrameFunctions() {
 
   bp::class_<FrameCollision, bp::bases<UnaryFunction>>(
       "FrameCollisionResidual", "Frame collision residual function.",
-      bp::init<int, int, shared_ptr<PinModel>, shared_ptr<GeometryModel>,
-               pinocchio::PairIndex, pinocchio::JointIndex>(
-          bp::args("self", "ndx", "nu", "model", "geom_model", "frame_pair_id",
-                   "joint_id")))
-      .def(FrameAPIVisitor<FrameCollision>());
+      bp::init<int, int, PinModel, GeometryModel, pinocchio::PairIndex>(
+          bp::args("self", "ndx", "nu", "model", "geom_model",
+                   "frame_pair_id")))
+      .def(FrameAPIVisitor<FrameVelocity>())
+      .def(unary_visitor);
 
   bp::register_ptr_to_python<shared_ptr<FrameCollisionData>>();
 
