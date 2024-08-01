@@ -100,6 +100,52 @@ def test_composite_cost():
     print("----")
 
 
+def test_barrier_cost():
+    space = manifolds.VectorSpace(3)
+    ndx = space.ndx
+    x0 = space.rand()
+
+    nu = space.ndx
+    u0 = np.ones(nu)
+    target = np.zeros(3)
+    fun = aligator.StateErrorResidual(space, nu, target)
+    # for debug
+    fd = fun.createData()
+    fun.evaluate(x0, u0, x0, fd)
+    fun.computeJacobians(x0, u0, x0, fd)
+
+    # costs
+
+    np.random.seed(40)
+    d = np.linalg.norm(fd.value)
+    alpha = d + 0.1
+    cost = aligator.BarrierResidualCost(space, fun, alpha)
+    assert np.array_equal(alpha, cost.alpha)
+
+    data = cost.createData()
+    print("Composite data:", data)
+    assert isinstance(data, aligator.CompositeCostData)
+
+    cost.evaluate(x0, u0, data)
+    cost.computeGradients(x0, u0, data)
+    cost.computeHessians(x0, u0, data)
+
+    J = fd.jac_buffer[:, : ndx + nu]
+    ref_grad = (d - alpha) / d * J.transpose() @ fd.value
+    a = J.transpose() @ fd.value
+    a = a.reshape(6, 1)
+    ref_hess = alpha * a @ a.transpose() / (d * d * d)
+    ref_hess += (d - alpha) / d * J.transpose() @ J
+
+    print("BarrierCost:")
+    print(data.value)
+    print(data.grad)
+    print(data.hess)
+    assert np.allclose(data.grad, ref_grad)
+    assert np.allclose(data.hess, ref_hess)
+    print("----")
+
+
 def test_quad_state():
     space = manifolds.SE2()
     ndx = space.ndx

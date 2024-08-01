@@ -1,6 +1,7 @@
 #include "aligator/python/fwd.hpp"
 #include "aligator/python/visitors.hpp"
 
+#include "aligator/modelling/costs/barrier-residual-cost.hpp"
 #include "aligator/modelling/costs/quad-state-cost.hpp"
 #include "aligator/modelling/costs/log-residual-cost.hpp"
 #include "aligator/python/polymorphic-convertible.hpp"
@@ -18,6 +19,7 @@ using context::StageFunction;
 using PolyFunction = xyz::polymorphic<StageFunction>;
 using ManifoldPtr = xyz::polymorphic<Manifold>;
 using QuadResCost = QuadraticResidualCostTpl<Scalar>;
+using BarrierResCost = BarrierResidualCostTpl<Scalar>;
 
 void exposeComposites() {
 
@@ -50,6 +52,17 @@ void exposeComposites() {
       .def_readwrite("residual", &LogResCost::residual_)
       .def_readwrite("weights", &LogResCost::barrier_weights_)
       .def(CopyableVisitor<LogResCost>())
+      .def(visitor);
+
+  bp::class_<BarrierResCost, bp::bases<CostAbstract>>(
+      "BarrierResidualCost", "Barrier 2-norm of a given residual function.",
+      bp::init<ManifoldPtr, PolyFunction, const double>(
+          bp::args("self", "space", "function", "alpha"))
+          [bp::with_custodian_and_ward<1, 2,
+                                       bp::with_custodian_and_ward<1, 3>>()])
+      .def_readwrite("residual", &BarrierResCost::residual_)
+      .def_readwrite("alpha", &BarrierResCost::alpha_)
+      .def(CopyableVisitor<BarrierResCost>())
       .def(visitor);
 
   bp::class_<CompositeData, bp::bases<CostData>>(
