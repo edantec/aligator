@@ -21,8 +21,10 @@ void FrameCollisionResidualTpl<Scalar>::evaluate(const ConstVectorRef &x,
   pinocchio::computeDistance(geom_model_, d.geometry_, frame_pair_id_);
 
   // calculate residual
-  d.value_ = d.geometry_.distanceResults[frame_pair_id_].nearest_points[0] -
-             d.geometry_.distanceResults[frame_pair_id_].nearest_points[1];
+  d.witness_distance_ =
+      d.geometry_.distanceResults[frame_pair_id_].nearest_points[0] -
+      d.geometry_.distanceResults[frame_pair_id_].nearest_points[1];
+  d.value_[0] = d.witness_distance_.norm();
 }
 
 template <typename Scalar>
@@ -55,15 +57,17 @@ void FrameCollisionResidualTpl<Scalar>::computeJacobians(const ConstVectorRef &,
       pinocchio::skew(d.distance2_).transpose() *
       d.Jcol2_.template bottomRows<3>();
 
-  // compute the residual derivatives
-  d.Jx_.leftCols(pin_model_.nv) =
+  Eigen::MatrixXd J =
       d.Jcol_.template topRows<3>() - d.Jcol2_.template topRows<3>();
+
+  // compute the residual derivatives
+  d.Jx_ = d.witness_distance_.transpose() / d.value_[0] * J;
 }
 
 template <typename Scalar>
 FrameCollisionDataTpl<Scalar>::FrameCollisionDataTpl(
     const FrameCollisionResidualTpl<Scalar> &model)
-    : Base(model.ndx1, model.nu, model.ndx2, 3), pin_data_(model.pin_model_),
+    : Base(model.ndx1, model.nu, model.ndx2, 1), pin_data_(model.pin_model_),
       geometry_(pinocchio::GeometryData(model.geom_model_)),
       Jcol_(6, model.pin_model_.nv), Jcol2_(6, model.pin_model_.nv) {
   Jcol_.setZero();

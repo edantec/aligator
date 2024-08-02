@@ -34,7 +34,7 @@ struct FrameCollisionResidualTpl : UnaryFunctionTpl<_Scalar>, frame_api {
   FrameCollisionResidualTpl(const int ndx, const int nu, const Model &model,
                             const GeometryModel &geom_model,
                             const pinocchio::PairIndex frame_pair_id)
-      : Base(ndx, nu, 3), pin_model_(model), geom_model_(geom_model),
+      : Base(ndx, nu, 1), pin_model_(model), geom_model_(geom_model),
         frame_pair_id_(frame_pair_id) {
     joint_id1_ =
         geom_model
@@ -82,9 +82,11 @@ struct FrameCollisionDataTpl : StageFunctionDataTpl<Scalar> {
   /// Pinocchio geometry object
   PinGeom geometry_;
   /// Jacobian of the collision point
+
   typename math_types<Scalar>::Matrix6Xs Jcol_;
   typename math_types<Scalar>::Matrix6Xs Jcol2_;
   /// Vector from joint point to collision point in world frame
+  typename math_types<Scalar>::Vector3s witness_distance_;
   typename math_types<Scalar>::Vector3s distance_;
   typename math_types<Scalar>::Vector3s distance2_;
 

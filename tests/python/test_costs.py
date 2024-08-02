@@ -119,7 +119,7 @@ def test_barrier_cost():
     np.random.seed(40)
     d = np.linalg.norm(fd.value)
     alpha = d + 0.1
-    cost = aligator.BarrierResidualCost(space, fun, alpha)
+    cost = aligator.BarrierResidualCost(space, fun, alpha, 1)
     assert np.array_equal(alpha, cost.alpha)
 
     data = cost.createData()

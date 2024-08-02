@@ -56,8 +56,8 @@ void exposeComposites() {
 
   bp::class_<BarrierResCost, bp::bases<CostAbstract>>(
       "BarrierResidualCost", "Barrier 2-norm of a given residual function.",
-      bp::init<ManifoldPtr, PolyFunction, const double>(
-          bp::args("self", "space", "function", "alpha"))
+      bp::init<ManifoldPtr, PolyFunction, const double, const double>(
+          bp::args("self", "space", "function", "alpha", "weight"))
           [bp::with_custodian_and_ward<1, 2,
                                        bp::with_custodian_and_ward<1, 3>>()])
       .def_readwrite("residual", &BarrierResCost::residual_)

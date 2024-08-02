@@ -20,18 +20,20 @@ struct BarrierResidualCostTpl : CostAbstractTpl<_Scalar> {
   using Scalar = _Scalar;
   ALIGATOR_DYNAMIC_TYPEDEFS(Scalar);
   using Base = CostAbstractTpl<Scalar>;
+  using BaseData = CompositeCostDataTpl<Scalar>;
   using CostData = CostDataAbstractTpl<Scalar>;
   using Data = CompositeCostDataTpl<Scalar>;
   using StageFunction = StageFunctionTpl<Scalar>;
   using Manifold = ManifoldAbstractTpl<Scalar>;
 
   double alpha_;
+  double weight_;
   xyz::polymorphic<StageFunction> residual_;
   bool gauss_newton = true;
 
   BarrierResidualCostTpl(xyz::polymorphic<Manifold> space,
                          xyz::polymorphic<StageFunction> function,
-                         const double alpha);
+                         const double alpha, const double weight);
 
   void evaluate(const ConstVectorRef &x, const ConstVectorRef &u,
                 CostData &data_) const;
