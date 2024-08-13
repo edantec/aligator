@@ -24,7 +24,16 @@ void FrameCollisionResidualTpl<Scalar>::evaluate(const ConstVectorRef &x,
   d.witness_distance_ =
       d.geometry_.distanceResults[frame_pair_id_].nearest_points[0] -
       d.geometry_.distanceResults[frame_pair_id_].nearest_points[1];
-  d.value_[0] = d.witness_distance_.norm();
+
+  d.witness_norm_ = d.witness_distance_.norm();
+  if (d.witness_norm_ < alpha_) {
+    d.value_[0] =
+        Scalar(0.5) * (d.witness_norm_ - alpha_) * (d.witness_norm_ - alpha_);
+  } else {
+    d.value_[0] = Scalar(0.0);
+  }
+  // d.value_[0] = -d.witness_distance_.norm() + alpha_;
+  // std::cout << "value " << d.value_[0] << std::endl;
 }
 
 template <typename Scalar>
@@ -61,7 +70,12 @@ void FrameCollisionResidualTpl<Scalar>::computeJacobians(const ConstVectorRef &,
       d.Jcol_.template topRows<3>() - d.Jcol2_.template topRows<3>();
 
   // compute the residual derivatives
-  d.Jx_ = d.witness_distance_.transpose() / d.value_[0] * J;
+  d.Jx_.setZero();
+  if (d.witness_norm_ < alpha_ and d.witness_norm_ > 0) {
+    d.Jx_.leftCols(pin_model_.nv) = d.witness_distance_.transpose() *
+                                    (d.witness_norm_ - alpha_) /
+                                    d.witness_norm_ * J;
+  }
 }
 
 template <typename Scalar>
@@ -72,6 +86,7 @@ FrameCollisionDataTpl<Scalar>::FrameCollisionDataTpl(
       Jcol_(6, model.pin_model_.nv), Jcol2_(6, model.pin_model_.nv) {
   Jcol_.setZero();
   Jcol2_.setZero();
+  witness_norm_ = 0;
 }
 
 } // namespace aligator

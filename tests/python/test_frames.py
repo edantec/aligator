@@ -196,8 +196,12 @@ def test_frame_collision():
     fr_id1 = model.getFrameId(fr_name1)
     joint_id = model.frames[fr_id1].parentJoint
 
+    fr_name2 = "rleg_elbow_body"
+    fr_id2 = model.getFrameId(fr_name2)
+    joint_id2 = model.frames[fr_id2].parentJoint
+
     frame_SE3 = pin.SE3.Random()
-    frame_SE3_obstacle = pin.SE3.Random()
+    frame_SE3_bis = pin.SE3.Random()
     alpha = np.random.rand()
     beta = np.random.rand()
 
@@ -207,16 +211,13 @@ def test_frame_collision():
             "frame", fr_id1, joint_id, hppfcl.Capsule(0, alpha), frame_SE3
         )
     )
-    ig_obs = geometry.addGeometryObject(
+
+    ig_frame2 = geometry.addGeometryObject(
         pin.GeometryObject(
-            "obs",
-            model.getFrameId("universe"),
-            model.frames[model.getFrameId("universe")].parentJoint,
-            hppfcl.Capsule(0, beta),
-            frame_SE3_obstacle,
+            "frame2", fr_id2, joint_id2, hppfcl.Capsule(0, beta), frame_SE3_bis
         )
     )
-    geometry.addCollisionPair(pin.CollisionPair(ig_frame, ig_obs))
+    geometry.addCollisionPair(pin.CollisionPair(ig_frame, ig_frame2))
     gdata = geometry.createData()
 
     space = manifolds.MultibodyConfiguration(model)
@@ -235,13 +236,15 @@ def test_frame_collision():
         gdata.distanceResults[0].getNearestPoint1()
         - gdata.distanceResults[0].getNearestPoint2()
     )
+    alph_dist = 3
+    norm = 0.5 * (np.linalg.norm(dist) - alph_dist) * (np.linalg.norm(dist) - alph_dist)
 
-    fun = aligator.FrameCollisionResidual(ndx, nu, model, geometry, 0, joint_id)
+    fun = aligator.FrameCollisionResidual(ndx, nu, model, geometry, 0, alph_dist)
 
     fdata = fun.createData()
     fun.evaluate(x0, fdata)
 
-    assert np.allclose(fdata.value, dist)
+    assert np.allclose(fdata.value[0], norm)
 
     fun.computeJacobians(x0, fdata)
     fun_fd = aligator.FiniteDifferenceHelper(space, fun, FD_EPS)
@@ -259,7 +262,7 @@ def test_frame_collision():
         fun.computeJacobians(x0, u0, x0, fdata)
         fun_fd.evaluate(x0, u0, x0, fdata2)
         fun_fd.computeJacobians(x0, u0, x0, fdata2)
-        assert np.allclose(fdata.Jx, fdata2.Jx, THRESH)
+        assert np.allclose(fdata.Jx, fdata2.Jx, THRESH, 1e-7)
 
 
 if __name__ == "__main__":

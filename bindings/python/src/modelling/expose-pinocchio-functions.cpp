@@ -118,9 +118,9 @@ void exposeFrameFunctions() {
 
   bp::class_<FrameCollision, bp::bases<UnaryFunction>>(
       "FrameCollisionResidual", "Frame collision residual function.",
-      bp::init<int, int, PinModel, GeometryModel, pinocchio::PairIndex>(
-          bp::args("self", "ndx", "nu", "model", "geom_model",
-                   "frame_pair_id")))
+      bp::init<int, int, PinModel, GeometryModel, pinocchio::PairIndex, double>(
+          bp::args("self", "ndx", "nu", "model", "geom_model", "frame_pair_id",
+                   "alpha")))
       .def(FrameAPIVisitor<FrameVelocity>())
       .def(unary_visitor);
 
