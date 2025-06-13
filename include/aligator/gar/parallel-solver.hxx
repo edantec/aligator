@@ -170,7 +170,7 @@ bool ParallelRiccatiSolver<Scalar>::backward(const Scalar mudyn,
       blockTridiagRefinementStep(condensedFacs.upFacs,
                                  condensedKktSystem.superdiagonal,
                                  condensedFacs.ldlt, condensedErr);
-      condensedKktSolution.matrix() += condensedErr.matrix();
+      // condensedKktSolution.matrix() += condensedErr.matrix();
       condensedErr = condensedKktRhs.matrix();
     }
   }
